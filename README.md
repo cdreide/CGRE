@@ -1,8 +1,10 @@
 # OCROnWebpages
 
+pipenv install
+
 | Task                                                      | Time  |
 |:-------------:                                            | -----:|
-| Einführung und Literatur                                  | 4 Wochen |
+| Einführung und Literatur                                  |   4 Wochen |
 | Datensätze generieren                                     |   4 Wochen |
 | Algorithmen anlernen und optimieren (Trainingsdatensatz)  |   4 Wochen |
 | Algorithmen erstellen                                     |   3 Wochen |
