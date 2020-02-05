@@ -4,7 +4,6 @@ import sys
 import numpy as np
 import cv2
 
-
 def main() -> None:
     print('generate_html called.')
 

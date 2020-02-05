@@ -1,12 +1,10 @@
 from cefpython3 import cefpython as cef
 import os
-import platform
 import sys
 from multiprocessing import Process, Queue
 from PIL import Image
 from typing import Dict, Tuple
-import time
-import asyncio
+
 
 # Main function
 def main() -> None:
@@ -20,7 +18,7 @@ def main() -> None:
 
 
 class Mediator(object):
-    def __init__(self, browser: cef.PyBrowser):
+    def __init__(self, browser: cef.PyBrowser) -> None:
         # self.loaded: bool = False
         self.viewport_size: Tuple[int, int] = (1024, 768)
         self.browser: cef.PyBrowser = browser
@@ -51,7 +49,7 @@ class Mediator(object):
             self.browser.StopLoad()
             print('RENDER:  "' + self.urls[self.count] + '"')
             self.browser.LoadUrl(self.urls[self.count])
-            self.browser.WasResized()
+            #self.browser.WasResized()
 
     # Compose viewport for display (collect screen pixels, blacken censored term)
     def save_image(self) -> None:
@@ -70,7 +68,6 @@ class Mediator(object):
 
 
 class CefHandle(object):
-    #def __init__(self):
 
     def run_cef(self) -> None:
 
@@ -87,7 +84,7 @@ class CefHandle(object):
             'disable-smooth-scrolling': '',
         }
         browser_settings: Dict[str, int] = {
-            'windowless_frame_rate': 15,
+            'windowless_frame_rate': 30,
         }
         cef.Initialize(settings=settings, switches=switches)
         print()
@@ -100,14 +97,14 @@ class CefHandle(object):
         cef.Shutdown()
 
     # Create a browser
-    def create_browser(self, settings):
+    def create_browser(self, settings) -> None:
 
-        parent_window_handle = 0
-        window_info = cef.WindowInfo()
+        parent_window_handle: int = 0
+        window_info: cef.WindowInfo = cef.WindowInfo()
         window_info.SetAsOffscreen(parent_window_handle)
         browser: cef.PyBrowser = cef.CreateBrowserSync(window_info=window_info, settings=settings, url="")
         
-        mediator = Mediator(browser)
+        mediator: Mediator = Mediator(browser)
         mediator.next_url()
 
         #browser.SetClientHandler(LoadHandler(mediator))
@@ -141,6 +138,9 @@ class RenderHandler(object):
             browser.SetUserData("OnPaint.buffer_string", buffer_string)
             self.mediator.save_image()
             self.mediator.next_url()
+
+# TODO: save only when truly the whole page was loaded
+# Problem: sometimes it's loaded before 'OnPaint' gets called the first time...
 
 # class LoadHandler(object):
 #     def __init__(self, mediator: Mediator):
