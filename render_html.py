@@ -52,7 +52,7 @@ def create_browser(settings) -> None:
     parent_window_handle = 0
     window_info = cef.WindowInfo()
     window_info.SetAsOffscreen(parent_window_handle)
-    browser = cef.CreateBrowserSync(window_info=window_info, settings=settings)
+    browser = cef.CreateBrowserSync(window_info=window_info, settings=settings, url=URL)
     browser.SetClientHandler(RenderHandler())
     browser.SendFocusEvent(True)
     browser.WasResized() # tell CEF that viewport size is available and OnPaint may be called
