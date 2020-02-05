@@ -1,94 +1,155 @@
 from cefpython3 import cefpython as cef
 import os
 import platform
-import subprocess
 import sys
-import cv2
-import numpy as np
-import re
-from multiprocessing import Process
+from multiprocessing import Process, Queue
 from PIL import Image
 from typing import Dict, Tuple
-
-# Config
-VIEWPORT_SIZE: Tuple[int, int] = (1024, 768)
-#path: str = "./html/index.html"
-#URL: str = "file:///" + os.path.abspath(path)
+import time
+import asyncio
 
 # Main function
 def main() -> None:
 
-    # Setup CEF
-    sys.excepthook = cef.ExceptHook  # to shutdown all CEF processes on error
-    settings: Dict[str, bool] = { 
-        "windowless_rendering_enabled": True,  # offscreen-rendering
-    }
-    switches: Dict[str, str] = {
-        "disable-gpu": "",
-        "disable-gpu-compositing": "",
-        "enable-begin-frame-scheduling": "",
-        "disable-surfaces": "",
-        "disable-smooth-scrolling": "",
-    }
-    browser_settings: Dict[str, int] = {
-        "windowless_frame_rate": 60,
-    }
-    cef.Initialize(settings=settings, switches=switches)
-    create_browser(browser_settings)
+    if not os.path.isdir('./html/'):
+        print('You need to create and fill the "html" folder.')
+        return
 
-    # Enter loop
-    cef.MessageLoop()
+    cef_handle = CefHandle()
+    cef_handle.run_cef()
 
-    # Cleanup
-    cef.Shutdown()
 
-# Create a browser
-def create_browser(settings) -> None:
+class Mediator(object):
+    def __init__(self, browser: cef.PyBrowser):
+        # self.loaded: bool = False
+        self.viewport_size: Tuple[int, int] = (1024, 768)
+        self.browser: cef.PyBrowser = browser
+        self.buffer: str = ""
+        
+        # 
+        if not os.path.isdir('./dataset'):
+            os.mkdir('./dataset')
+        self.out_dir: str = './dataset/'
 
-    # just for testing purposes
-    path: str = "./html/index.html"
-    URL: str = "file:///" + os.path.abspath(path)
+        self.urls: [str] = [""]
+        listOfFile: [str] = os.listdir('./html/')
 
-    parent_window_handle = 0
-    window_info = cef.WindowInfo()
-    window_info.SetAsOffscreen(parent_window_handle)
-    browser = cef.CreateBrowserSync(window_info=window_info, settings=settings, url=URL)
-    browser.SetClientHandler(RenderHandler())
-    browser.SendFocusEvent(True)
-    browser.WasResized() # tell CEF that viewport size is available and OnPaint may be called
+        for f in listOfFile:
+            if f.endswith(".html"):
+                f = 'html/' + f
+                self.urls.append('file://' + os.path.abspath(f))
+        
+        del self.urls[0]     
+        self.count: int = 0
 
-# Exit the application
-def exit_app(browser) -> None:
-    browser.CloseBrowser()
-    cef.QuitMessageLoop()
+    def get_current_url(self) -> str:
+        return self.urls[self.count]
 
-# Compose viewport for display (collect screen pixels, blacken censored term)
-def save(buffer: str) -> None:
-    image = Image.frombytes("RGBA", VIEWPORT_SIZE, buffer,
-                        "raw", "RGBA", 0, 1)
-    # Save image
-    if not os.path.isdir('./dataset'):
-        os.mkdir('./dataset')
-    image.save('./dataset/test.png', 'PNG')
-    print('./dataset/test.png')
+    def next_url(self) -> None:
+        # print('count: ' + str(self.count))
+        if self.count < len(self.urls):
+            self.browser.StopLoad()
+            print('RENDER:  "' + self.urls[self.count] + '"')
+            self.browser.LoadUrl(self.urls[self.count])
+            self.browser.WasResized()
+
+    # Compose viewport for display (collect screen pixels, blacken censored term)
+    def save_image(self) -> None:
+        #await self.buffer_event.wait()
+        #self.buffer_event.clear()
+        buffer_string = self.browser.GetUserData("OnPaint.buffer_string")
+        if not buffer_string:
+            raise Exception("buffer_string is empty, OnPaint never called?")
+        image = Image.frombytes('RGBA', self.viewport_size, buffer_string,
+                            'raw', 'RGBA', 0, 1)
+        # Save image
+        image.save(self.out_dir + str(self.count) + '.png', 'PNG')
+        print('SAVE:    "' + str(self.count) + '.png"')
+        self.count += 1
+
+
+
+class CefHandle(object):
+    #def __init__(self):
+
+    def run_cef(self) -> None:
+
+        # Setup CEF
+        sys.excepthook = cef.ExceptHook  # to shutdown all CEF processes on error
+        settings: Dict[str, bool] = { 
+            'windowless_rendering_enabled': True,  # offscreen-rendering
+        }
+        switches: Dict[str, str] = {
+            'disable-gpu': '',
+            'disable-gpu-compositing': '',
+            'enable-begin-frame-scheduling': '',
+            'disable-surfaces': '',
+            'disable-smooth-scrolling': '',
+        }
+        browser_settings: Dict[str, int] = {
+            'windowless_frame_rate': 15,
+        }
+        cef.Initialize(settings=settings, switches=switches)
+        print()
+        self.create_browser(browser_settings)
+
+        # Enter loop
+        cef.MessageLoop()
+
+        # Cleanup
+        cef.Shutdown()
+
+    # Create a browser
+    def create_browser(self, settings):
+
+        parent_window_handle = 0
+        window_info = cef.WindowInfo()
+        window_info.SetAsOffscreen(parent_window_handle)
+        browser: cef.PyBrowser = cef.CreateBrowserSync(window_info=window_info, settings=settings, url="")
+        
+        mediator = Mediator(browser)
+        mediator.next_url()
+
+        #browser.SetClientHandler(LoadHandler(mediator))
+        browser.SetClientHandler(RenderHandler(mediator))
+
+        browser.SendFocusEvent(True)
+        browser.WasResized()
+        return browser
+
+    # Exit the application
+    def exit_app(self, browser: cef.PyBrowser) -> None:
+        browser.CloseBrowser()
+        cef.QuitMessageLoop()
 
 # Handle the rendering
 class RenderHandler(object):
-    def GetViewRect(self, rect_out: [int], **_) -> None:
-        global VIEWPORT_SIZE
+    def __init__(self, mediator: Mediator):
+        self.mediator = mediator
 
-        rect_out.extend([0, 0, VIEWPORT_SIZE[0], VIEWPORT_SIZE[1]])
+    def GetViewRect(self, rect_out: [int], **_) -> bool:
+        rect_out.extend([0, 0, self.mediator.viewport_size[0], self.mediator.viewport_size[1]])
         return True
 
-    def OnPaint(self, browser, element_type, paint_buffer, **_) -> None:
-
+    def OnPaint(self, browser: cef.PyBrowser, element_type, paint_buffer, **_) -> None:
         if element_type == cef.PET_VIEW:
-            buffer: str = paint_buffer.GetBytes(mode="bgra", origin="top-left")
+            self.mediator.loaded = False
+            # print('OnPaint')
+            # retrieve the image bytes
+            buffer_string: str = paint_buffer.GetBytes(mode='rgba', origin='top-left')
+            # initiate the image creation
+            browser.SetUserData("OnPaint.buffer_string", buffer_string)
+            self.mediator.save_image()
+            self.mediator.next_url()
 
-            # Tell CEF to redraw
-            #cef.PostTask(cef.TID_UI, save)
-            save(buffer)
+# class LoadHandler(object):
+#     def __init__(self, mediator: Mediator):
+#         self.mediator = mediator
+# 
+#     def OnLoadingStateChange(self, browser: cef.PyBrowser, is_loading, **_):
+#         if not is_loading:
+#             self.mediator.loaded = True
+#             print('OnLoad')
 
-# Python voodoo
 if __name__ == '__main__':
     main()
