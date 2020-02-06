@@ -7,6 +7,9 @@ name = "pypi"
 cefpython3 = "*"
 opencv-python = "*"
 pillow = "*"
+htmlmin = "*"
+dominate = "*"
+python-lorem = "*"
 
 [dev-packages]
 pylint = "*"

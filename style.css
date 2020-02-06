@@ -1,0 +1,19 @@
+html {
+    height: 768px !important;
+    width: 1024px !important;
+}
+
+.grid {
+    height: 768px !important;
+    width: 1024px !important;
+    margin: 0px;
+    display: grid;
+    grid-template: repeat(3,256px) / repeat(3,341px);
+    grid-gap: 0px;
+}
+.cell {
+    height: 256px;
+    width: 341px;
+    background: rgb(226, 8, 8);
+    font-size: 10px;
+}

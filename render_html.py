@@ -9,10 +9,6 @@ import asyncio
 # Main function
 def main() -> None:
 
-    if not os.path.isdir('./html/'):
-        print('You need to create and fill the "html" folder.')
-        return
-
     cef_handle = CefHandle()
     cef_handle.run_cef()
 
@@ -21,21 +17,22 @@ class Mediator(object):
     def __init__(self, browser: cef.PyBrowser) -> None:
         self.loaded: bool = False
         self.painted: bool = False
-        self.viewport_size: Tuple[int, int] = (1024, 768)
+        self.viewport_size: Tuple[int, int] = (1100, 800) #(1024, 768)
         self.browser: cef.PyBrowser = browser
         self.buffer: str = ''
         self.lock: asyncio.Lock = asyncio.Lock()
-        # 
-        if not os.path.isdir('./dataset'):
-            os.mkdir('./dataset')
-        self.out_dir: str = './dataset/'
+        self.in_dir: str = './test_html/'
+        self.out_dir: str = './test_dataset/'
+        if not os.path.isdir(self.out_dir):
+            os.mkdir(self.out_dir)
 
         self.urls: [str] = ['']
-        listOfFile: [str] = os.listdir('./html/')
+
+        listOfFile: [str] = os.listdir(self.in_dir)
 
         for f in listOfFile:
             if f.endswith('.html'):
-                f = 'html/' + f
+                f = self.in_dir[2:] + f
                 self.urls.append('file://' + os.path.abspath(f))
         
         del self.urls[0]     
@@ -53,15 +50,12 @@ class Mediator(object):
             self.browser.WasResized()
 
     def save_image(self) -> bool:
-        #lock = asyncio.Lock()
-        #async with lock:
-
         if self.painted and self.loaded:
             buffer_string = self.browser.GetUserData('OnPaint.buffer_string')
-            image = Image.frombytes('RGBA', self.viewport_size, buffer_string,
-                                'raw', 'RGBA', 0, 1)
+            rgba_image = Image.frombytes('RGBA', self.viewport_size, buffer_string, 'raw', 'RGBA', 0, 1)
+            rgb_image = rgba_image.convert('RGB')
             # Save image
-            image.save(self.out_dir + str(self.count) + '.png', 'PNG')
+            rgb_image.save(self.out_dir + str(self.count) + '.png', 'PNG')
             print('SAVE:    "' + str(self.count) + '.png"')
             self.painted = False
             self.loaded = False

@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "c74932ffa9a1b02365ccac40dcf0da45f1184ce3876b4ab2c15f982c7cede957"
+            "sha256": "15b90efb3c6c053a3a9bdcff89765b9ebce97375ab5ff6fcfd66dc4224761028"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -26,6 +26,21 @@
             ],
             "index": "pypi",
             "version": "==66.0"
+        },
+        "dominate": {
+            "hashes": [
+                "sha256:6e833aea505f0236a9fc692326bac575f8bd38ae0f3a1bdc73d20ca606ac75d5",
+                "sha256:a92474b4312bd8b4c1789792f3ec8c571cd8afa8e7502a2b1c64dd48cd67e59c"
+            ],
+            "index": "pypi",
+            "version": "==2.4.0"
+        },
+        "htmlmin": {
+            "hashes": [
+                "sha256:50c1ef4630374a5d723900096a961cff426dff46b48f34d194a81bbe14eca178"
+            ],
+            "index": "pypi",
+            "version": "==0.1.12"
         },
         "numpy": {
             "hashes": [
@@ -113,6 +128,14 @@
             ],
             "index": "pypi",
             "version": "==7.0.0"
+        },
+        "python-lorem": {
+            "hashes": [
+                "sha256:18e4681139593b499b4a5b75d09782adc2688c8d0a9ba7deb34012bcfc5d36f5",
+                "sha256:395a9c633283804bd88fa51a3ed6863c80779d5df6c38169d423f51303a84ca1"
+            ],
+            "index": "pypi",
+            "version": "==1.1.1"
         }
     },
     "develop": {
