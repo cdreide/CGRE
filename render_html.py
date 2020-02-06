@@ -4,7 +4,7 @@ import sys
 from multiprocessing import Process, Queue
 from PIL import Image
 from typing import Dict, Tuple
-
+import asyncio
 
 # Main function
 def main() -> None:
@@ -19,21 +19,22 @@ def main() -> None:
 
 class Mediator(object):
     def __init__(self, browser: cef.PyBrowser) -> None:
-        # self.loaded: bool = False
+        self.loaded: bool = False
+        self.painted: bool = False
         self.viewport_size: Tuple[int, int] = (1024, 768)
         self.browser: cef.PyBrowser = browser
-        self.buffer: str = ""
-        
+        self.buffer: str = ''
+        self.lock: asyncio.Lock = asyncio.Lock()
         # 
         if not os.path.isdir('./dataset'):
             os.mkdir('./dataset')
         self.out_dir: str = './dataset/'
 
-        self.urls: [str] = [""]
+        self.urls: [str] = ['']
         listOfFile: [str] = os.listdir('./html/')
 
         for f in listOfFile:
-            if f.endswith(".html"):
+            if f.endswith('.html'):
                 f = 'html/' + f
                 self.urls.append('file://' + os.path.abspath(f))
         
@@ -44,27 +45,28 @@ class Mediator(object):
         return self.urls[self.count]
 
     def next_url(self) -> None:
-        # print('count: ' + str(self.count))
+        #print('count: ' + str(self.count))
         if self.count < len(self.urls):
             self.browser.StopLoad()
             print('RENDER:  "' + self.urls[self.count] + '"')
             self.browser.LoadUrl(self.urls[self.count])
-            #self.browser.WasResized()
+            self.browser.WasResized()
 
-    # Compose viewport for display (collect screen pixels, blacken censored term)
-    def save_image(self) -> None:
-        #await self.buffer_event.wait()
-        #self.buffer_event.clear()
-        buffer_string = self.browser.GetUserData("OnPaint.buffer_string")
-        if not buffer_string:
-            raise Exception("buffer_string is empty, OnPaint never called?")
-        image = Image.frombytes('RGBA', self.viewport_size, buffer_string,
-                            'raw', 'RGBA', 0, 1)
-        # Save image
-        image.save(self.out_dir + str(self.count) + '.png', 'PNG')
-        print('SAVE:    "' + str(self.count) + '.png"')
-        self.count += 1
+    def save_image(self) -> bool:
+        #lock = asyncio.Lock()
+        #async with lock:
 
+        if self.painted and self.loaded:
+            buffer_string = self.browser.GetUserData('OnPaint.buffer_string')
+            image = Image.frombytes('RGBA', self.viewport_size, buffer_string,
+                                'raw', 'RGBA', 0, 1)
+            # Save image
+            image.save(self.out_dir + str(self.count) + '.png', 'PNG')
+            print('SAVE:    "' + str(self.count) + '.png"')
+            self.painted = False
+            self.loaded = False
+            self.count += 1
+            self.next_url()
 
 
 class CefHandle(object):
@@ -102,12 +104,12 @@ class CefHandle(object):
         parent_window_handle: int = 0
         window_info: cef.WindowInfo = cef.WindowInfo()
         window_info.SetAsOffscreen(parent_window_handle)
-        browser: cef.PyBrowser = cef.CreateBrowserSync(window_info=window_info, settings=settings, url="")
+        browser: cef.PyBrowser = cef.CreateBrowserSync(window_info=window_info, settings=settings, url='')
         
         mediator: Mediator = Mediator(browser)
         mediator.next_url()
 
-        #browser.SetClientHandler(LoadHandler(mediator))
+        browser.SetClientHandler(LoadHandler(mediator))
         browser.SetClientHandler(RenderHandler(mediator))
 
         browser.SendFocusEvent(True)
@@ -128,28 +130,37 @@ class RenderHandler(object):
         rect_out.extend([0, 0, self.mediator.viewport_size[0], self.mediator.viewport_size[1]])
         return True
 
-    def OnPaint(self, browser: cef.PyBrowser, element_type, paint_buffer, **_) -> None:
+    def OnPaint(self, browser: cef.PyBrowser, element_type, dirty_rects, paint_buffer, width, height) -> None:
+        # print('width:   ' + str(width))
+        # print('height:  ' + str(height))
         if element_type == cef.PET_VIEW:
-            self.mediator.loaded = False
-            # print('OnPaint')
+            print('OnPaint: ' + browser.GetUrl())
             # retrieve the image bytes
             buffer_string: str = paint_buffer.GetBytes(mode='rgba', origin='top-left')
             # initiate the image creation
-            browser.SetUserData("OnPaint.buffer_string", buffer_string)
+            browser.SetUserData('OnPaint.buffer_string', buffer_string)
+            self.mediator.painted = True
             self.mediator.save_image()
-            self.mediator.next_url()
 
 # TODO: save only when truly the whole page was loaded
 # Problem: sometimes it's loaded before 'OnPaint' gets called the first time...
 
-# class LoadHandler(object):
-#     def __init__(self, mediator: Mediator):
-#         self.mediator = mediator
-# 
-#     def OnLoadingStateChange(self, browser: cef.PyBrowser, is_loading, **_):
-#         if not is_loading:
-#             self.mediator.loaded = True
-#             print('OnLoad')
+class LoadHandler(object):
+    def __init__(self, mediator: Mediator):
+        self.mediator = mediator
+
+    def OnLoadingStateChange(self, browser: cef.PyBrowser, is_loading, **_):
+        if not is_loading:
+            print('OnLoad:  ' + browser.GetUrl())
+            self.mediator.loaded = True
+            self.mediator.save_image()
+
+
+    # def OnLoadingStateChange(self, browser: cef.PyBrowser, **_):
+    #     print('OnLoad')
+    #     self.mediator.loaded = True
+    #     if self.mediator.save_image():
+    #         self.mediator.next_url()
 
 if __name__ == '__main__':
     main()
