@@ -142,8 +142,9 @@ class RenderHandler(object):
             self.mediator.painted = True
             self.mediator.save_image()
 
-# TODO: save only when truly the whole page was loaded
-# Problem: sometimes it's loaded before 'OnPaint' gets called the first time...
+# TODO:     save only when truly the whole page was loaded
+# Problem:  sometimes it's loaded before 'OnPaint' gets called the last time
+#       ==> we cannot know when it was called the last time
 
 class LoadHandler(object):
     def __init__(self, mediator: Mediator):
