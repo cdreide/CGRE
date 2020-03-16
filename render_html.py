@@ -23,13 +23,13 @@ class Mediator(object):
         self.browser: cef.PyBrowser = browser
         self.buffer: str = ''
         self.lock: asyncio.Lock = asyncio.Lock()
-        self.in_dir: str = './test_html/'
-        self.out_dir: str = './test_dataset/'
+        self.in_dir: str = 'html/'
+        self.out_dir: str = './dataset/'
         self.current_file: str = 'index.html'
         Path(self.out_dir).mkdir(parents=True, exist_ok=True)
         self.urls: [str] = ['']
 
-        for path in Path('./test_html').rglob('*.html'):
+        for path in Path(self.in_dir).rglob('*.html'):
             self.urls.append('file://' + os.path.abspath(path))
 
         self.urls.pop(0)
@@ -43,7 +43,8 @@ class Mediator(object):
         if self.count < len(self.urls):
             self.browser.StopLoad()
             print('RENDER:  "' + self.urls[self.count] + '"')
-            self.current_file = re.search(r'(?<=test_html\/).*', self.urls[self.count]).group()[:-5]
+            reg_ex = '(?<='+ self.in_dir + ').*'
+            self.current_file = re.search(re.compile(reg_ex), self.urls[self.count]).group()[:-5]
             self.browser.LoadUrl(self.urls[self.count])
             self.browser.WasResized()
 
@@ -60,6 +61,9 @@ class Mediator(object):
             self.painted = False
             self.loaded = False
             self.count += 1
+            if self.count >= len(self.urls):
+                print('Finished without error! (ignore the following output)')
+                sys.exit()
             self.next_url()
 
 
