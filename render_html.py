@@ -1,10 +1,12 @@
 from cefpython3 import cefpython as cef
 import os
+from pathlib import Path
 import sys
 from multiprocessing import Process, Queue
 from PIL import Image
 from typing import Dict, Tuple
 import asyncio
+import re
 
 # Main function
 def main() -> None:
@@ -23,19 +25,14 @@ class Mediator(object):
         self.lock: asyncio.Lock = asyncio.Lock()
         self.in_dir: str = './test_html/'
         self.out_dir: str = './test_dataset/'
-        if not os.path.isdir(self.out_dir):
-            os.mkdir(self.out_dir)
-
+        self.current_file: str = 'index.html'
+        Path(self.out_dir).mkdir(parents=True, exist_ok=True)
         self.urls: [str] = ['']
 
-        listOfFile: [str] = os.listdir(self.in_dir)
+        for path in Path('./test_html').rglob('*.html'):
+            self.urls.append('file://' + os.path.abspath(path))
 
-        for f in listOfFile:
-            if f.endswith('.html'):
-                f = self.in_dir[2:] + f
-                self.urls.append('file://' + os.path.abspath(f))
-        
-        del self.urls[0]     
+        self.urls.pop(0)
         self.count: int = 0
 
     def get_current_url(self) -> str:
@@ -46,6 +43,7 @@ class Mediator(object):
         if self.count < len(self.urls):
             self.browser.StopLoad()
             print('RENDER:  "' + self.urls[self.count] + '"')
+            self.current_file = re.search(r'(?<=test_html\/).*', self.urls[self.count]).group()[:-5]
             self.browser.LoadUrl(self.urls[self.count])
             self.browser.WasResized()
 
@@ -55,8 +53,10 @@ class Mediator(object):
             rgba_image = Image.frombytes('RGBA', self.viewport_size, buffer_string, 'raw', 'RGBA', 0, 1)
             rgb_image = rgba_image.convert('RGB')
             # Save image
-            rgb_image.save(self.out_dir + str(self.count) + '.png', 'PNG')
-            print('SAVE:    "' + str(self.count) + '.png"')
+            real_out_dir: str = re.search(r'(.*[\/])', self.out_dir + self.current_file).group()
+            Path(real_out_dir).mkdir(parents=True, exist_ok=True)
+            rgb_image.save(self.out_dir + self.current_file + '.png', 'PNG')
+            print('SAVE:    "' + self.current_file + '.png"')   # relative to self.real_out_dir
             self.painted = False
             self.loaded = False
             self.count += 1
@@ -139,6 +139,7 @@ class RenderHandler(object):
 # TODO:     save only when truly the whole page was loaded
 # Problem:  sometimes it's loaded before 'OnPaint' gets called the last time
 #       ==> we cannot know when it was called the last time
+# **** Maybe okay considering the small html pages ****
 
 class LoadHandler(object):
     def __init__(self, mediator: Mediator):

@@ -1,3 +1,4 @@
+/* General Layout */
 html {
     height: 768px !important;
     width: 1024px !important;
@@ -14,6 +15,48 @@ html {
 .cell {
     height: 256px;
     width: 341px;
-    background: rgb(226, 8, 8);
+    background: rgb(255, 255, 255);
+}
+
+/* Font Families */
+.arial {
+    font-family: Arial;
+}
+
+.verdana {
+    font-family: Verdana;
+}
+
+.georgia {
+    font-family: Georgia;
+}
+
+/* Font Sizes */
+.six {
+    font-size: 6px;
+}
+
+.ten {
     font-size: 10px;
+}
+
+.sixteen {
+    font-size: 16px;
+}
+
+/* Font Styles */
+.normal {
+    font-style: normal;
+}
+
+.italic {
+    font-style: italic;
+}
+
+.bold {
+    font-weight: bold;
+}
+
+.underline {
+    text-decoration: underline;
 }
