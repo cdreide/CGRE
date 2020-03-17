@@ -11,7 +11,7 @@ import lorem
 import re
 from enum import Enum
 
-# test_html/font_family/font_size/font_style/layout
+# html/font_family/font_size/font_style/layout
 
 def main() -> None:
     print('generate_html called.')
@@ -88,136 +88,74 @@ class Generator(object):
 
         with doc.head:
             link(rel='stylesheet', href=os.path.abspath('style.css'))
-            script(type='text/javascript', src='script.js')
+            script(type='text/javascript', src=os.path.abspath('script.js'))
 
         with doc.body:
             with div(cls='grid' + ' ' + font_family + ' ' + font_size + ' ' + font_style):
                 if layout == Layout.center:
                             div(cls='cell')
-                            if paragraphs[0]:
-                                with div(cls='cell'):
-                                    p(paragraphs[0])
+                            str_to_span(paragraphs[0])
                             div(cls='cell')
                             div(cls='cell')
-                            if paragraphs[1]:
-                                with div(cls='cell'):
-                                    p(paragraphs[1])
+                            str_to_span(paragraphs[1])
                             div(cls='cell')
                             div(cls='cell')
-                            if paragraphs[2]:
-                                with div(cls='cell'):
-                                    p(paragraphs[2])
+                            str_to_span(paragraphs[2])
                             div(cls='cell')
                 elif layout == Layout.left:
-                            if paragraphs[0]:
-                                with div(cls='cell'):
-                                    p(paragraphs[0])
+                            str_to_span(paragraphs[0])
                             div(cls='cell')
                             div(cls='cell')
-                            if paragraphs[1]:
-                                with div(cls='cell'):
-                                    p(paragraphs[1])
+                            str_to_span(paragraphs[1])
                             div(cls='cell')
                             div(cls='cell')
-                            if paragraphs[2]:
-                                with div(cls='cell'):
-                                    p(paragraphs[2])
+                            str_to_span(paragraphs[2])
                             div(cls='cell')
                             div(cls='cell')
+
                 elif layout == Layout.top:
-                            if paragraphs[0]:
-                                with div(cls='cell'):
-                                    p(paragraphs[0])
-                            if paragraphs[1]:
-                                with div(cls='cell'):
-                                    p(paragraphs[1])
-                            if paragraphs[2]:
-                                with div(cls='cell'):
-                                    p(paragraphs[2])
+                            str_to_span(paragraphs[0])
+                            str_to_span(paragraphs[1])
+                            str_to_span(paragraphs[2])
                             div(cls='cell')
                             div(cls='cell')
                             div(cls='cell')
                             div(cls='cell')
                             div(cls='cell')
                             div(cls='cell')
+
                 elif layout == Layout.wall_of_text:
-                            if paragraphs[0]:
-                                with div(cls='cell'):
-                                    p(paragraphs[0])
-                            if paragraphs[1]:
-                                with div(cls='cell'):
-                                    p(paragraphs[1])
-                            if paragraphs[2]:
-                                with div(cls='cell'):
-                                    p(paragraphs[2])
-                            if paragraphs[3]:
-                                with div(cls='cell'):
-                                    p(paragraphs[3])
-                            if paragraphs[4]:
-                                with div(cls='cell'):
-                                    p(paragraphs[4])
-                            if paragraphs[5]:
-                                with div(cls='cell'):
-                                    p(paragraphs[5])
-                            if paragraphs[6]:
-                                with div(cls='cell'):
-                                    p(paragraphs[6])
-                            if paragraphs[7]:
-                                with div(cls='cell'):
-                                    p(paragraphs[7])
-                            if paragraphs[8]:
-                                with div(cls='cell'):
-                                    p(paragraphs[8])
+                            str_to_span(paragraphs[0])
+                            str_to_span(paragraphs[1])
+                            str_to_span(paragraphs[2])
+                            str_to_span(paragraphs[3])
+                            str_to_span(paragraphs[4])
+                            str_to_span(paragraphs[5])
+                            str_to_span(paragraphs[6])
+                            str_to_span(paragraphs[7])
+                            str_to_span(paragraphs[8])
+                            
                 elif layout == Layout.l_word_c_text:
-                            if words[0]:
-                                with div(cls='cell'):
-                                    p(words[0])
-                            if paragraphs[0]:
-                                with div(cls='cell'):
-                                    p(paragraphs[0])
+                            str_to_span(words[0])
+                            str_to_span(paragraphs[0])
                             div(cls='cell')
-                            if words[1]:
-                                with div(cls='cell'):
-                                    p(words[1])
-                            if paragraphs[1]:
-                                with div(cls='cell'):
-                                    p(paragraphs[1])
+                            str_to_span(words[1])
+                            str_to_span(paragraphs[1])
                             div(cls='cell')
-                            if words[2]:
-                                with div(cls='cell'):
-                                    p(words[2])
-                            if paragraphs[2]:
-                                with div(cls='cell'):
-                                    p(paragraphs[2])
+                            str_to_span(words[2])
+                            str_to_span(paragraphs[2])
                             div(cls='cell')
+
                 elif layout == Layout.words:
-                            if words[0]:
-                                with div(cls='cell'):
-                                    p(words[0])
-                            if words[1]:
-                                with div(cls='cell'):
-                                    p(words[1])
-                            if words[2]:
-                                with div(cls='cell'):
-                                    p(words[2])
-                            if words[3]:
-                                with div(cls='cell'):
-                                    p(words[3])
-                            if words[4]:
-                                with div(cls='cell'):
-                                    p(words[4])
-                            if words[5]:
-                                with div(cls='cell'):
-                                    p(words[5])
-                            if words[6]:
-                                with div(cls='cell'):
-                                    p(words[6])
-                            if words[7]:
-                                with div(cls='cell'):
-                                    p(words[7])
-                            if words[8]:
-                                with div(cls='cell'):
-                                    p(words[8])
+                            str_to_span(words[0])
+                            str_to_span(words[1])
+                            str_to_span(words[2])
+                            str_to_span(words[3])
+                            str_to_span(words[4])
+                            str_to_span(words[5])
+                            str_to_span(words[6])
+                            str_to_span(words[7])
+                            str_to_span(words[8])
 
         out_path: str = ""
 
@@ -225,18 +163,24 @@ class Generator(object):
             out_path = re.search(r'(.*[\/])', path).group()
         except AttributeError:
             out_path = path
-        print('out_path: ' + out_path)
-        print('path: ' + path)
-        print()
         Path(out_path).mkdir(parents=True, exist_ok=True)
         with open(path + '.html', 'w') as f:
-            f.write(htmlmin.minify(doc.render(pretty=False), remove_empty_space=True))
+            f.write(htmlmin.minify(doc.render(), remove_empty_space=True))
         print('CREATED:  ' + path + '.html')
 
-    def save_file(self, document: dominate.document, name: str) -> None:
-        with open(self.save_directory + name + '.html', 'w') as f:
-            f.write(document)
-        print('CREATED:  ' + name + '.html')
+
+
+def str_to_span(content: str):
+    paragraph = p()
+    for word in content.split():
+        # non alphanumeric and alphanumeric will be in different spans
+        if not word[-1:].isalnum():
+            paragraph.add(span(word[:-1]))
+            paragraph.add(span(word[-1:]))
+        else:
+            paragraph.add(span(word))
+        paragraph.add(span(' '))
+    return div(cls='cell').add(paragraph)
 
 
 

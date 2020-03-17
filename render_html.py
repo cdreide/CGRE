@@ -63,6 +63,7 @@ class Mediator(object):
             self.count += 1
             if self.count >= len(self.urls):
                 print('Finished without error! (ignore the following output)')
+                print()
                 sys.exit()
             self.next_url()
 
@@ -88,7 +89,12 @@ class CefHandle(object):
         }
         cef.Initialize(settings=settings, switches=switches)
         print()
-        self.create_browser(browser_settings)
+        browser = self.create_browser(browser_settings)
+
+        bindings = cef.JavascriptBindings()
+        bindings.SetFunction("py_function", py_function)
+        bindings.SetFunction("py_callback", py_callback)
+        browser.SetJavascriptBindings(bindings)
 
         # Enter loop
         cef.MessageLoop()
@@ -129,10 +135,10 @@ class RenderHandler(object):
         return True
 
     def OnPaint(self, browser: cef.PyBrowser, element_type, dirty_rects, paint_buffer, width, height) -> None:
-        # print('width:   ' + str(width))
-        # print('height:  ' + str(height))
+        #print('dirty_rects: ')
+        #print(dirty_rects)
         if element_type == cef.PET_VIEW:
-            print('OnPaint: ' + browser.GetUrl())
+            #print('OnPaint: ' + browser.GetUrl())
             # retrieve the image bytes
             buffer_string: str = paint_buffer.GetBytes(mode='rgba', origin='top-left')
             # initiate the image creation
@@ -149,10 +155,10 @@ class LoadHandler(object):
     def __init__(self, mediator: Mediator):
         self.mediator = mediator
 
-    def OnLoadingStateChange(self, browser: cef.PyBrowser, is_loading, **_):
-        if not is_loading:
-            print('OnLoad:  ' + browser.GetUrl())
+    def OnLoadEnd(self, browser: cef.PyBrowser, frame: cef.PyFrame, **_):
             self.mediator.loaded = True
+            browser.ExecuteFunction("js_function", "I am a Python string #1")
+
             self.mediator.save_image()
 
 
@@ -161,6 +167,32 @@ class LoadHandler(object):
     #     self.mediator.loaded = True
     #     if self.mediator.save_image():
     #         self.mediator.next_url()
+
+def py_function(value, js_callback):
+    #print("Value sent from Javascript: " + value)
+    path: str = value.split('\n')[0][8:]
+    os.path.abspath('./')
+    term = 'OCROnWebpages\/html\/'
+    reg = '(' + term + ')(.*)'
+
+    found = re.search(re.compile(reg),path).groups()[1]
+
+    found_list = found.split('/')[0:-1]
+    found_path = '/'.join(found_list)
+
+    found_path_name_list = found.split('.')[0:-1]
+    found_path_name = '/'.join(found_path_name_list)
+
+    out_dir = os.path.abspath('dataset/' + found_path + '/')
+    Path(out_dir).mkdir(parents=True, exist_ok=True)
+    with open('dataset/' + found_path_name + '.txt', 'w') as f:
+        f.write(value)
+    print('SAVE:    ' + out_dir + '.txt')
+    js_callback.Call('', py_callback)
+
+
+def py_callback(value):
+    x = 0
 
 if __name__ == '__main__':
     main()
