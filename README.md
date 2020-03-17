@@ -11,7 +11,7 @@ generate:
     => './html/font_family/font_size/font_style/layout.html'
 
 render ( &save ):
-`` pipenv run python render_html.py ``
+`` pipenv run python render_html.py ``  
     => './dataset/font_family/font_size/font_style/layout.png'  
     => './dataset/font_family/font_size/font_style/layout.txt'  
         (contains words and their boxes in this format: // word\t(left,top,width,height)\n)  
