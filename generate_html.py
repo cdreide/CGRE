@@ -16,7 +16,9 @@ from enum import Enum
 def main() -> None:
     print('generate_html called.')
     generator: Generator = Generator()
-    generator.generate_html()
+    for i in range(0, 10):
+        generator.save_directory: str = './html/' + str(i) + '/'
+        generator.generate_html()
 
 class Layout(Enum):
     center = 1
