@@ -10,6 +10,8 @@ pillow = "*"
 htmlmin = "*"
 dominate = "*"
 python-lorem = "*"
+pytesseract = "*"
+matplotlib = "*"
 
 [dev-packages]
 pylint = "*"
