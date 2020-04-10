@@ -8,7 +8,7 @@ function js_function(value) {
         if (spans[i].innerText.match(/^[a-zA-Z0-9]+/)) {
             let word = spans[i].innerText
             let rect = spans[i].getBoundingClientRect()
-            output += word + '\t(' + rect.left + ',' + rect.top + ',' + rect.width + ',' + rect.height + ')\n'
+            output += word + '\t(' + Math.round(rect.left) + ',' + Math.round(rect.top) + ',' + Math.round(rect.width) + ',' + Math.round(rect.height) + ')\n'
         }
         
     }

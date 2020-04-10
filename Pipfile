@@ -12,6 +12,8 @@ dominate = "*"
 python-lorem = "*"
 pytesseract = "*"
 matplotlib = "*"
+python-levenshtein = "*"
+progressbar2 = "*"
 
 [dev-packages]
 pylint = "*"

@@ -26,7 +26,7 @@ for p in files:
     next(f)
     for l in f:
       coordinate_tuple: [int] = []
-      coordinates = re.search(r'([0-9.]+),([0-9.]+),([0-9.]+),([0-9.]+)', l).groups()
+      coordinates = re.search(r'([0-9]+),([0-9]+),([0-9]+),([0-9]+)', l).groups()
       for coordinate in coordinates:
         coordinate_tuple.append(int(float(coordinate)))
       all_coordinates.append(tuple(coordinate_tuple))
