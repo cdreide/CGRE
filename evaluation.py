@@ -83,7 +83,7 @@ def main() -> None:
                     ideal.append(get_word_coordinate_dict(line))
                     if first_ideal:
                         del ideal[0]
-                        first_ideal = False)
+                        first_ideal = False
         with open(recognized_file_path, 'r') as f:
             # print('load:\t' + recognized_file_path)
             for line in f:
