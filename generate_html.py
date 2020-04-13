@@ -10,13 +10,17 @@ from dominate.tags import *
 import lorem
 import re
 from enum import Enum
+import progressbar
+import codecs
 
 # html/font_family/font_size/font_style/layout
+
+prints: bool = True
 
 def main() -> None:
     print('generate_html called.')
     generator: Generator = Generator()
-    for i in range(0, 10):
+    for i in progressbar.progressbar(range(0, 10)):
         generator.save_directory: str = './html/' + str(i) + '/'
         generator.generate_html()
 
@@ -166,9 +170,10 @@ class Generator(object):
         except AttributeError:
             out_path = path
         Path(out_path).mkdir(parents=True, exist_ok=True)
-        with open(path + '.html', 'w') as f:
+        with codecs.open(path + '.html', 'w', "utf-8-sig") as f:
             f.write(htmlmin.minify(doc.render(), remove_empty_space=True))
-        print('CREATED:  ' + path + '.html')
+        global prints
+        if prints: print('CREATED:  ' + path + '.html')
 
 
 

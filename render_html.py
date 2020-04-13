@@ -9,8 +9,11 @@ import asyncio
 import re
 import json
 import csv
+import codecs
 
 data_list: str = 'path,word,left,top,width,height\n'
+
+prints: bool = True
 
 # Main function
 def main() -> None:
@@ -22,7 +25,7 @@ class Mediator(object):
     def __init__(self, browser: cef.PyBrowser) -> None:
         self.loaded: bool = False
         self.painted: bool = False
-        self.viewport_size: Tuple[int, int] = (1034, 778) #(1100, 800)
+        self.viewport_size: Tuple[int, int] = (1100, 800)
         self.browser: cef.PyBrowser = browser
         self.buffer: str = ''
         self.lock: asyncio.Lock = asyncio.Lock()
@@ -59,17 +62,18 @@ class Mediator(object):
             # Save image
             real_out_dir: str = re.search(r'(.*[\/])', self.out_dir + self.current_file).group()
             Path(real_out_dir).mkdir(parents=True, exist_ok=True)
-            rgb_image.save(self.out_dir + self.current_file + '.png', 'PNG')
-            print('SAVE:    "' + self.out_dir + self.current_file + '.png"')   # relative to self.real_out_dir
+            rgb_image.save(self.out_dir + self.current_file + '.png', 'PNG', dpi=(self.viewport_size[0], self.viewport_size[1]))
+            global prints
+            if prints: print('SAVE:    "' + self.out_dir + self.current_file + '.png"')   # relative to self.real_out_dir
             self.painted = False
             self.loaded = False
             self.count += 1
             if self.count >= len(self.urls):
-                with open(self.out_dir + 'data.csv', 'w') as f:
+                with codecs.open(self.out_dir + 'data.csv', 'w', "utf-8") as f:
                     f.write(data_list)
-                print('SAVED:  ' + 'data.csv')
-                print('Finished without error! (ignore the following output)')
-                print()
+                if prints: print('SAVED:  ' + 'data.csv')
+                if prints: print('Finished without error! (ignore the following output)')
+                if prints: print()
                 sys.exit()
             self.next_url()
 
@@ -191,9 +195,10 @@ def save_data_txt(value):
 
     out_dir = os.path.abspath('dataset/' + found_path + '/')
     Path(out_dir).mkdir(parents=True, exist_ok=True)
-    with open('dataset/' + found_path_name + '.txt', 'w') as f:
+    with codecs.open('dataset/' + found_path_name + '.txt', 'w', "utf-8") as f:
         f.write(value)
-    print('SAVE:    ' + out_dir + '.txt')
+    global prints
+    if prints: print('SAVE:    ' + out_dir + '.txt')
 
 if __name__ == '__main__':
     main()

@@ -2,6 +2,7 @@ import time
 from pathlib import Path
 import re
 import subprocess
+import codecs
 
 root = Path().absolute()
 load = '/dataset/'
@@ -43,7 +44,7 @@ for p in files:
   save_path = str(p).replace(load, save)
   Path(save_path).parent.mkdir(parents=True, exist_ok=True)
   
-  with open(save_path.replace('.png', '.txt'), 'w') as f:
+  with codecs.open(save_path.replace('.png', '.txt'), 'w', "utf-8-sig") as f:
     for i in range(len(texts)):
       (left, top, width, height) = all_coordinates[i] 
       f.write(texts[i] + '\ţ' + str(left) + str(top) + str(width) + str(height) + '\n')

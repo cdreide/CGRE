@@ -4,10 +4,14 @@ function get_data_txt() {
     let output = window.location.href + '\n';
     let spans = document.getElementsByTagName('span');
     for(i = 0; i < spans.length; i++) {
-        if (spans[i].innerText.match(/^[a-zA-Z0-9]+/)) {
-            let word = spans[i].innerText
-            let rect = spans[i].getBoundingClientRect()
-            output += word + '\t(' + Math.round(rect.left) + ',' + Math.round(rect.top) + ',' + Math.round(rect.width) + ',' + Math.round(rect.height) + ')\n'
+        let rect = spans[i].getBoundingClientRect()
+        if (rect.top >= 0 &&
+            rect.left >= 0 &&
+            rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+            rect.right <= (window.innerWidth || document.documentElement.clientWidth) &&
+            spans[i].innerText.match(/^[a-zA-Z0-9]+/)) {
+                let word = spans[i].innerText
+                output += word + '\t(' + Math.round(rect.left) + ',' + Math.round(rect.top) + ',' + Math.round(rect.width) + ',' + Math.round(rect.height) + ')\n'
         }
     }
     save_data(output);
@@ -30,13 +34,12 @@ function get_data_csv() {
     // retrieve the data
     let spans = document.getElementsByTagName('span');
     for(i = 0; i < spans.length; i++) {
+        let rect = spans[i].getBoundingClientRect()
         if (rect.top >= 0 &&
             rect.left >= 0 &&
             rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
             rect.right <= (window.innerWidth || document.documentElement.clientWidth) &&
             spans[i].innerText.match(/^[a-zA-Z0-9]+/)) {
-
-                let rect = spans[i].getBoundingClientRect()
 
             output += path
             output += ','

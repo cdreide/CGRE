@@ -10,6 +10,7 @@ import re
 import Levenshtein.StringMatcher as levenshtein
 import progressbar
 import csv
+import codecs
 
 # Type Definitions
 Line = Dict[str, str]
@@ -68,7 +69,7 @@ def main() -> None:
     for i in progressbar.progressbar(range(len(ideal_files))):
         ideal_file_path = ideal_files[i]
         recognized_file_path: str = str(get_recognized(ideal_file_path, ideal_path, recognized_path))
-
+        
         # RETRIEVE THE DATA
         ideal: Line = [{'word': '', 'left': '', 'top': '', 'width': '', 'height': ''}]
         recognized: Line = [{'word': '', 'left': '', 'top': '', 'width': '', 'height': ''}]
@@ -82,8 +83,7 @@ def main() -> None:
                     ideal.append(get_word_coordinate_dict(line))
                     if first_ideal:
                         del ideal[0]
-                        first_ideal = False
-
+                        first_ideal = False)
         with open(recognized_file_path, 'r') as f:
             # print('load:\t' + recognized_file_path)
             for line in f:
@@ -249,13 +249,13 @@ def main() -> None:
 
     # TODO: save in senseful place and file
     log_filename: str = 'evaluation_' + ideal_path.name + '_' + recognized_path.name + '.txt'
-    with open(log_filename, 'w') as f:
+    with codecs.open(log_filename, 'w', "utf-8-sig") as f:
         f.write(log)
     print('\ncreated:\t' + log_filename)
 
     csv_filename: str = 'evaluation_' + ideal_path.name + '_' + recognized_path.name + '.csv'
     csv_keys = file_results[0].keys()
-    with open(csv_filename, 'w') as f:
+    with codecs.open(csv_filename, 'w', "utf-8-sig") as f:
         dict_writer = csv.DictWriter(f, csv_keys)
         dict_writer.writeheader()
         dict_writer.writerows(file_results)
