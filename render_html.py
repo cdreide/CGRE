@@ -7,6 +7,10 @@ from PIL import Image
 from typing import Dict, Tuple
 import asyncio
 import re
+import json
+import csv
+
+data_list: str = 'path,word,left,top,width,height\n'
 
 # Main function
 def main() -> None:
@@ -14,12 +18,11 @@ def main() -> None:
     cef_handle = CefHandle()
     cef_handle.run_cef()
 
-
 class Mediator(object):
     def __init__(self, browser: cef.PyBrowser) -> None:
         self.loaded: bool = False
         self.painted: bool = False
-        self.viewport_size: Tuple[int, int] = (1100, 800) #(1024, 768)
+        self.viewport_size: Tuple[int, int] = (1034, 778) #(1100, 800)
         self.browser: cef.PyBrowser = browser
         self.buffer: str = ''
         self.lock: asyncio.Lock = asyncio.Lock()
@@ -57,16 +60,18 @@ class Mediator(object):
             real_out_dir: str = re.search(r'(.*[\/])', self.out_dir + self.current_file).group()
             Path(real_out_dir).mkdir(parents=True, exist_ok=True)
             rgb_image.save(self.out_dir + self.current_file + '.png', 'PNG')
-            print('SAVE:    "' + self.current_file + '.png"')   # relative to self.real_out_dir
+            print('SAVE:    "' + self.out_dir + self.current_file + '.png"')   # relative to self.real_out_dir
             self.painted = False
             self.loaded = False
             self.count += 1
             if self.count >= len(self.urls):
+                with open(self.out_dir + 'data.csv', 'w') as f:
+                    f.write(data_list)
+                print('SAVED:  ' + 'data.csv')
                 print('Finished without error! (ignore the following output)')
                 print()
                 sys.exit()
             self.next_url()
-
 
 class CefHandle(object):
 
@@ -92,8 +97,7 @@ class CefHandle(object):
         browser = self.create_browser(browser_settings)
 
         bindings = cef.JavascriptBindings()
-        bindings.SetFunction("py_function", py_function)
-        bindings.SetFunction("py_callback", py_callback)
+        bindings.SetFunction("save_data", save_data_txt)
         browser.SetJavascriptBindings(bindings)
 
         # Enter loop
@@ -157,7 +161,7 @@ class LoadHandler(object):
 
     def OnLoadEnd(self, browser: cef.PyBrowser, frame: cef.PyFrame, **_):
             self.mediator.loaded = True
-            browser.ExecuteFunction("js_function", "I am a Python string #1")
+            browser.ExecuteFunction("get_data_txt")
 
             self.mediator.save_image()
 
@@ -168,13 +172,15 @@ class LoadHandler(object):
     #     if self.mediator.save_image():
     #         self.mediator.next_url()
 
-def py_function(value, js_callback):
-    #print("Value sent from Javascript: " + value)
+def save_data_csv(data) -> None:
+    global data_list
+    data_list += data
+
+def save_data_txt(value):
     path: str = value.split('\n')[0][8:]
     os.path.abspath('./')
     term = 'OCROnWebpages\/html\/'
     reg = '(' + term + ')(.*)'
-
     found = re.search(re.compile(reg),path).groups()[1]
 
     found_list = found.split('/')[0:-1]
@@ -188,11 +194,6 @@ def py_function(value, js_callback):
     with open('dataset/' + found_path_name + '.txt', 'w') as f:
         f.write(value)
     print('SAVE:    ' + out_dir + '.txt')
-    js_callback.Call('', py_callback)
-
-
-def py_callback(value):
-    x = 0
 
 if __name__ == '__main__':
     main()
