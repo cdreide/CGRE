@@ -4,6 +4,10 @@ html {
     width: 1024px !important;
 }
 
+body {
+    overflow: hidden; /* Hide scrollbars */
+}
+
 .grid {
     height: 768px !important;
     width: 1024px !important;
