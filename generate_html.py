@@ -260,7 +260,7 @@ def prepare_bible():
     bible_list: [str] = ['']
     regex = r'([0-9]+\t[0-9]+\t\t[0-9]+\t)([a-zA-Z0-9.,\;\- ]*)'
 
-    with open('resources/kjv_apocrypha_utf8.txt', 'r') as f:
+    with open('resources/bible', 'r') as f:
         for line in f:
             if line.startswith('#'):
                 continue
