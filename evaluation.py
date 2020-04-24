@@ -186,7 +186,6 @@ def main() -> None:
         pass
     try:
         fone_score_l =  2 * (precision_l * recall_l) / (precision_l + recall_l)
-        
     except:
         pass
 
