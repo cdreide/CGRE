@@ -64,3 +64,51 @@ body {
 .underline {
     text-decoration: underline;
 }
+
+/* Font Colors */
+.f_black {
+    color: black;
+}
+
+.f_green {
+    color: green;
+}
+
+.f_red {
+    color: red;
+}
+
+.f_blue {
+    color: blue;
+}
+
+.f_white {
+    color: white;
+}
+
+/* Background Colors */
+.b_black {
+    background: black;
+}
+
+.b_green {
+    background: green;
+}
+
+.b_red {
+    background: red;
+}
+
+.b_blue {
+    background: blue;
+}
+
+.b_white {
+    background: white;
+}
+
+/* IMAGE */
+.img {
+    width: 100%;
+    height: 100%;
+}
