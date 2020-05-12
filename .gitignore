@@ -132,7 +132,8 @@ dmypy.json
 .vscode
 blob_storage
 html
-dataset*
+dataset
+dataset.*
 sample
 
 webrtc_event_logs
