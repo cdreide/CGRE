@@ -10,10 +10,12 @@ import re
 import json
 import csv
 import codecs
+import progressbar
 
 data_list: str = 'path,word,left,top,width,height\n'
 
-prints: bool = True
+prints: bool = False
+mk_csv: bool = False
 
 # Main function
 def main() -> None:
@@ -37,8 +39,8 @@ class Mediator(object):
 
         for path in Path(self.in_dir).rglob('*.html'):
             self.urls.append('file://' + os.path.abspath(path))
-
         self.urls.pop(0)
+        self.bar = progressbar.ProgressBar(max_value=len(self.urls))
         self.count: int = 0
 
     def get_current_url(self) -> str:
@@ -48,7 +50,8 @@ class Mediator(object):
         #print('count: ' + str(self.count))
         if self.count < len(self.urls):
             self.browser.StopLoad()
-            print('RENDER:  "' + self.urls[self.count] + '"')
+            global prints
+            if prints: print('RENDER:  "' + self.urls[self.count] + '"')
             reg_ex = '(?<='+ self.in_dir + ').*'
             self.current_file = re.search(re.compile(reg_ex), self.urls[self.count]).group()[:-5]
             self.browser.LoadUrl(self.urls[self.count])
@@ -56,6 +59,9 @@ class Mediator(object):
 
     def save_image(self) -> bool:
         if self.painted and self.loaded:
+            global prints
+            global mk_csv
+
             buffer_string = self.browser.GetUserData('OnPaint.buffer_string')
             rgba_image = Image.frombytes('RGBA', self.viewport_size, buffer_string, 'raw', 'RGBA', 0, 1)
             rgb_image = rgba_image.convert('RGB')
@@ -63,12 +69,12 @@ class Mediator(object):
             real_out_dir: str = re.search(r'(.*[\/])', self.out_dir + self.current_file).group()
             Path(real_out_dir).mkdir(parents=True, exist_ok=True)
             rgb_image.save(self.out_dir + self.current_file + '.png', 'PNG', dpi=(self.viewport_size[0], self.viewport_size[1]))
-            global prints
             if prints: print('SAVE:    "' + self.out_dir + self.current_file + '.png"')   # relative to self.real_out_dir
             self.painted = False
             self.loaded = False
+            self.bar.update(self.count)
             self.count += 1
-            if self.count >= len(self.urls):
+            if self.count >= len(self.urls) and mk_csv:
                 with codecs.open(self.out_dir + 'data.csv', 'w', "utf-8") as f:
                     f.write(data_list)
                 if prints: print('SAVED:  ' + 'data.csv')
