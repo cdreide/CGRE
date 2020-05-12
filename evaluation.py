@@ -11,6 +11,7 @@ import Levenshtein.StringMatcher as levenshtein
 import progressbar
 import csv
 import codecs
+import sys
 
 # Type Definitions
 Line = Dict[str, str]
@@ -25,6 +26,8 @@ def main() -> None:
     parser.add_argument('recognized', metavar='recognized', type=str, nargs=1, help='a directories containing the recognized dataset')
     # Accepted Coordinate Threshold
     parser.add_argument('-ct', metavar='coordinate_threshold', type=int, nargs=1, default=0, help='how off can the localisation be? (Default is 0)')
+    # How many percent of the ground truth box should be in the accepted box? (Default ist 1)
+    parser.add_argument('-cp', metavar='coordinate_percent', type=float, nargs=1, default=1.0, help='how many percent of the ground truth box should be in the accepted box? (Default ist 1.0)')
     # Accepted Levenshtein Distance
     parser.add_argument('-lt', metavar='levenshtein_threshold', type=int, nargs=1, default=0, help='how off can the determination be? (Default is 0)')
     args = parser.parse_args()
@@ -34,8 +37,17 @@ def main() -> None:
     ideal_path: Path = Path(args.ideal[0]).absolute()
     recognized_path: Path = Path(args.recognized[0]).absolute()
     # Acceptance
-    coordinate_threshold: int = args.ct[0]
-    levenshtein_threshold: int = args.lt[0]
+    coordinate_threshold: int = args.ct[0] if isinstance(args.ct, list) else args.ct
+    coordinate_percent: float = args.cp[0] if isinstance(args.cp, list) else args.cp
+    levenshtein_threshold: int = args.lt[0] if isinstance(args.lt, list) else args.lt
+
+    use_threshold: bool = False
+    if coordinate_threshold != 0:
+        use_threshold = True
+
+    if coordinate_threshold != 0 and coordinate_percent != 1.0:
+        print('Please provide either coordinate_threshold or coordinate_percent!')
+        sys.exit(1)
 
     # Input
     print('\n')
@@ -44,7 +56,8 @@ def main() -> None:
     print('recognized_path:\t' + str(recognized_path))
 
     # Configuation
-    print('Coordinate Threshold:\t' + str(coordinate_threshold))
+    if use_threshold: print('Coordinate Threshold:\t' + str(coordinate_threshold))
+    if not use_threshold: print('Coordinate Percent:\t' + str(coordinate_percent))
     print('Levenshtein Threshold:\t' + str(levenshtein_threshold))
     print('\n')
 
@@ -106,7 +119,7 @@ def main() -> None:
         for ideal_line in ideal:
             found: bool = False
             for i in range(len(recognized_copy)):
-                if validate_coordinate(ideal_line, recognized_copy[i], coordinate_threshold):
+                if validate_coordinate(ideal_line, recognized_copy[i], coordinate_threshold, coordinate_percent, use_threshold):
                     found = True
                     del recognized_copy[i]
                     break
@@ -141,7 +154,7 @@ def main() -> None:
         for ideal_line in ideal:
             found: bool = False
             for i in range(len(recognized_copy)):
-                if validate_word(ideal_line, recognized_copy[i], coordinate_threshold, levenshtein_threshold):
+                if validate_word(ideal_line, recognized_copy[i], coordinate_threshold, coordinate_percent, levenshtein_threshold, use_threshold):
                     found = True
                     del recognized_copy[i]
                     break
@@ -218,9 +231,10 @@ def main() -> None:
 
     # Configuation
     log += '\n'
-    log += 'Coordinate Threshold:\t' + str(coordinate_threshold) + '\n'
+    
+    if use_threshold: log += 'Coordinate Threshold:\t' + str(coordinate_threshold) + '\n'
+    if not use_threshold: log += 'Coordinate Percent:\t' + str(coordinate_percent) + '\n'
     log += 'Levenshtein Threshold:\t' + str(levenshtein_threshold) + '\n'
-
     # Localisation Results
     log += '\n'
     log += 'LOCALISATION:' + '\n'
@@ -281,36 +295,82 @@ def get_word_coordinate_dict(line: str) -> Line:
 
     return output
 
-def validate_coordinate(ideal_line: Line, recognized_line: Line, coordinate_threshold: int) -> bool:
-    return (ideal_line['left'] and
-        ideal_line['top'] and
-        ideal_line['width'] and
-        ideal_line['height'] and
-        recognized_line['left'] != '' and
-        recognized_line['top'] != '' and
-        recognized_line['width'] != '' and
-        recognized_line['height'] != '' and
-        abs(int(recognized_line['left']) - int(ideal_line['left']) <= coordinate_threshold) and
-        abs(int(recognized_line['top']) - int(ideal_line['top']) <= coordinate_threshold) and
-        abs(int(recognized_line['width']) - int(ideal_line['width']) <= coordinate_threshold) and
-        abs(int(recognized_line['height']) - int(ideal_line['height']) <= coordinate_threshold))
+def validate_coordinate(ideal_line: Line, recognized_line: Line, coordinate_threshold: int, coordinate_percent: float, use_threshold: bool) -> bool:
+    valid_input: bool = (
+            ideal_line['left'] and
+            ideal_line['top'] and
+            ideal_line['width'] and
+            ideal_line['height'] and
+            recognized_line['left'] != '' and
+            recognized_line['top'] != '' and
+            recognized_line['width'] != '' and
+            recognized_line['height'] != ''
+        )
 
-def validate_word(ideal_line: Line, recognized_line: Line, coordinate_threshold: int, levenshtein_threshold: int) -> bool:
-    return (ideal_line['left'] and
-        ideal_line['top'] and
-        ideal_line['width'] and
-        ideal_line['height'] and
-        recognized_line['word'] != '' and
-        ideal_line['word'] != '' and
-        recognized_line['left'] != '' and
-        recognized_line['top'] != '' and
-        recognized_line['width'] != '' and
-        recognized_line['height'] != '' and
-        levenshtein.distance(recognized_line['word'], ideal_line['word']) < levenshtein_threshold and
-        abs(int(recognized_line['left']) - int(ideal_line['left']) <= coordinate_threshold) and
-        abs(int(recognized_line['top']) - int(ideal_line['top']) <= coordinate_threshold) and
-        abs(int(recognized_line['width']) - int(ideal_line['width']) <= coordinate_threshold) and
-        abs(int(recognized_line['height']) - int(ideal_line['height']) <= coordinate_threshold))
+    if not valid_input:
+        return False
+
+    valid_box: bool = False
+
+    if use_threshold:
+        valid_box = (
+                abs(int(recognized_line['left']) - int(ideal_line['left']) <= coordinate_threshold) and
+                abs(int(recognized_line['top']) - int(ideal_line['top']) <= coordinate_threshold) and
+                abs(int(recognized_line['width']) - int(ideal_line['width']) <= coordinate_threshold) and
+                abs(int(recognized_line['height']) - int(ideal_line['height']) <= coordinate_threshold)
+            )
+    else:
+        ideal_area: float = int(ideal_line['width']) * int(ideal_line['height'])
+        common_area: int = 0
+        dx = min(int(ideal_line['width']), int(recognized_line['width'])) - max(int(ideal_line['left']), int(recognized_line['left']))
+        dy = min(int(ideal_line['height']), int(recognized_line['height'])) - max(int(ideal_line['top']), int(recognized_line['top']))
+        if (dx >= 0) and (dy >= 0):
+            common_area = dx * dy
+        if (float(common_area) / float(ideal_area)) >= coordinate_percent:
+            valid_box = True
+
+    return valid_box
+
+def validate_word(ideal_line: Line, recognized_line: Line, coordinate_threshold: int, coordinate_percent: float, levenshtein_threshold: int, use_threshold: bool) -> bool:
+    valid_input: bool = (
+            ideal_line['left'] and
+            ideal_line['top'] and
+            ideal_line['width'] and
+            ideal_line['height'] and
+            ideal_line['word'] != '' and
+            recognized_line['word'] != '' and
+            recognized_line['left'] != '' and
+            recognized_line['top'] != '' and
+            recognized_line['width'] != '' and
+            recognized_line['height'] != ''
+        )
+
+    if not valid_input:
+        return False
+
+    valid_box: bool = False
+
+    if use_threshold:
+        valid_box = (
+                abs(int(recognized_line['left']) - int(ideal_line['left']) <= coordinate_threshold) and
+                abs(int(recognized_line['top']) - int(ideal_line['top']) <= coordinate_threshold) and
+                abs(int(recognized_line['width']) - int(ideal_line['width']) <= coordinate_threshold) and
+                abs(int(recognized_line['height']) - int(ideal_line['height']) <= coordinate_threshold)
+            )
+    else:
+        ideal_area: float = int(ideal_line['width']) * int(ideal_line['height'])
+        common_area: int = 0
+        dx = min(int(ideal_line['width']), int(recognized_line['width'])) - max(int(ideal_line['left']), int(recognized_line['left']))
+        dy = min(int(ideal_line['height']), int(recognized_line['height'])) - max(int(ideal_line['top']), int(recognized_line['top']))
+        if (dx >= 0) and (dy >= 0):
+            common_area = dx * dy
+        if (float(common_area) / ideal_area) >= coordinate_percent:
+            valid_box = True
+
+    valid_levenshtein: bool = levenshtein.distance(recognized_line['word'], ideal_line['word']) < levenshtein_threshold
+
+    return valid_box and valid_levenshtein
+
 
 if __name__ == '__main__':
     main()
