@@ -127,3 +127,17 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# 
+.vscode
+blob_storage
+html
+dataset
+dataset.*
+sample
+
+webrtc_event_logs
+
+test*
+Notes
+evaluation_*
