@@ -36,8 +36,11 @@ def main() -> None:
     # Paths
     ideal_path: Path = Path(args.ideal[0]).absolute()
     recognized_path: Path = Path(args.recognized[0]).absolute()
+    outpath: str = str(Path('../results/evaluation').absolute())
+    Path(outpath).mkdir(parents=True, exist_ok=True)
     # Acceptance
     coordinate_threshold: int = args.ct[0] if isinstance(args.ct, list) else args.ct
+    # https://towardsdatascience.com/evaluating-performance-of-an-object-detection-model-137a349c517b
     coordinate_percent: float = args.cp[0] if isinstance(args.cp, list) else args.cp
     levenshtein_threshold: int = args.lt[0] if isinstance(args.lt, list) else args.lt
 
@@ -260,20 +263,20 @@ def main() -> None:
 
     print('\n' + log)
 
-    # TODO: save in senseful place and file
-    log_filename: str = 'evaluation_' + ideal_path.name + '_' + recognized_path.name + '.txt'
+    # Save the evaluation results
+    log_filename: str = outpath + 'evaluation_' + ideal_path.name + '_' + recognized_path.name + '.txt'
     with codecs.open(log_filename, 'w', "utf-8-sig") as f:
         f.write(log)
     print('\ncreated:\t' + log_filename)
 
-    csv_filename: str = 'evaluation_' + ideal_path.name + '_' + recognized_path.name + '.csv'
+    csv_filename: str = outpath + 'evaluation_' + ideal_path.name + '_' + recognized_path.name + '.csv'
     csv_keys = file_results[0].keys()
     with codecs.open(csv_filename, 'w', "utf-8-sig") as f:
         dict_writer = csv.DictWriter(f, csv_keys)
         dict_writer.writeheader()
         dict_writer.writerows(file_results)
     print('created:\t' + csv_filename)
-    
+
 
 
 def get_recognized(file_path: Path, ideal_path: Path, recognized_path: Path) -> Path:

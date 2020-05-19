@@ -1,9 +1,9 @@
 #!/bin/bash
 
-cd tesseract_localiser
+cd ../localisation/tesseract_localiser
 ./setup.sh
-./build/tesseract_localiser ../dataset ../dataset_tesseract_complete_l
+./build/tesseract_localiser ../../results/dataset ../../results/dataset_tesseract_l
 
-cd tesseract_determiner
+cd ../determination/tesseract_determiner
 ./setup.sh
-./build/tesseract_determiner ../dataset_tesseract_complete_l ../dataset_tesseract_complete_cpp
+./build/tesseract_determiner ../../results/dataset_tesseract_complete_l ../../results/dataset_tesseract_complete_d

@@ -12,11 +12,11 @@ int main (int argc, char *argv[]) {
 
     bool prints = true;
 
-    int argc_wanted = 3;
+    int argc_wanted = 4;
 
     if (argc < argc_wanted) {
         std::cout << "Missing Arguments! (" << argc - 1 << " provided, " <<  argc_wanted - 1 << " needed)" << std::endl;
-        std::cout << "Provide the path to a folder with images and corresponding text files." << std::endl;
+        std::cout << "Provide the path to a folder with images, corresponding text files and the output." << std::endl;
         return 1;
     }
 
@@ -28,15 +28,16 @@ int main (int argc, char *argv[]) {
         exit(1);
     }
 
-    auto inPath = fs::absolute(fs::path(argv[1])).lexically_normal();
-    auto outDir = fs::absolute(fs::path(argv[2])).lexically_normal();
+    auto inPath_img = fs::absolute(fs::path(argv[1])).lexically_normal();
+    auto inPath_txt = fs::absolute(fs::path(argv[2])).lexically_normal();
+    auto outDir = fs::absolute(fs::path(argv[3])).lexically_normal();
 
     int left, top, width, height;
 
     std::vector<std::string> imgs = {};
 
     // Get the paths to the images
-    for (const auto & entry : fs::recursive_directory_iterator(inPath)) {
+    for (const auto & entry : fs::recursive_directory_iterator(inPath_img)) {
         auto currentPath = fs::path(entry);
         if (currentPath.extension() == ".png")
             imgs.push_back(fs::absolute(entry.path()));
@@ -50,67 +51,63 @@ int main (int argc, char *argv[]) {
         auto extIndex  = imgPath.find(".png");
         auto txtPath = imgPath;
         txtPath.replace(extIndex, txtPath.length() - 1, ".txt");
+        auto endOfPath = txtPath.erase(0, inPath_img.string().size());
+        txtPath = inPath_txt.string() + endOfPath;
         if (prints) std::cout << "Loading (txt): " << txtPath << std::endl;
 
         // Extract coordinates
         std::ifstream coordinateFile(txtPath);
-        std::string line;
+        std::string line = "";
         std::vector<int> coordinates = {};
         std::smatch match;
-        std::regex rgx("[0-9]+");
+        std::regex rgx("([0-9]+),([0-9]+),([0-9]+),([0-9]+)");
 
         while (std::getline(coordinateFile, line)) {
             if (line.find("file://") != std::string::npos)
                 continue;
-
-            const std::regex regex("[0-9]+");
-            std::smatch match;
-            while (std::regex_search(line, match, regex)) {
-
-                for (auto currCoordinate : match)
-                    coordinates.push_back(std::stoi(currCoordinate.str()));
-
-                line = match.suffix().str();
+            if (std::regex_search(line, match, rgx)) {
+                for (int i = 1; i < match.size(); i++)
+                    coordinates.push_back(std::stoi(match[i].str()));
             }
         }
 
-        // Read Image
-        Pix *image = pixRead(imgPath.c_str());
-        api->SetImage(image);
-
         // Output file
         std::vector<std::string> outLines;
+        if (!coordinates.empty()) {
+            // Read Image
+            Pix *image = pixRead(imgPath.c_str());
+            api->SetImage(image);
 
-        for (int i = 0; i < coordinates.size() - 4; i += 4) {
-            int left = coordinates[i];
-            int top = coordinates[i+1];
-            int width = coordinates[i+2];
-            int height = coordinates[i+3];
-            
-            //  Set the Rectangles that need to be checked
-            api->SetRectangle(left, top, width, height);
-            
-            // Get OCR result
-            std::string outText;
-            outText = api->GetUTF8Text();
+            for (int i = 0; i < coordinates.size() - 4; i += 4) {
+                int left = coordinates[i];
+                int top = coordinates[i+1];
+                int width = coordinates[i+2];
+                int height = coordinates[i+3];
+                
+                //  Set the Rectangles that need to be checked
+                api->SetRectangle(left, top, width, height);
+                
+                // Get OCR result
+                std::string outText;
+                outText = api->GetUTF8Text();
 
-            // Create Output
-            if (outText.length() > 2)
-                outText = outText.erase(outText.length() - 3, outText.length() - 1);
-            std::string outLine = outText + "\t" + "(" + std::to_string(left) + "," + std::to_string(top) + "," + std::to_string(width) + "," + std::to_string(height) + ")";
-            outLines.push_back(outLine);
+                // Create Output
+                if (outText.length() > 2)
+                    outText = outText.erase(outText.length() - 3, outText.length() - 1);
+                std::string outLine = outText + "\t" + "(" + std::to_string(left) + "," + std::to_string(top) + "," + std::to_string(width) + "," + std::to_string(height) + ")";
+                outLines.push_back(outLine);
+            }
+            pixDestroy(&image);
         }
+            // Write found words in file
+            // auto endOfPath = txtPath.erase(0, inPath_img.string().size());
+            auto outPath = outDir.string() + endOfPath;
+            if (prints) std::cout << "Writing (txt): " << outPath << std::endl;
+            fs::create_directories(fs::path(outPath).parent_path());
+            std::ofstream outFile(outPath);
+            std::ostream_iterator<std::string> output_iterator(outFile);
+            for (const auto & line : outLines) outFile << line << "\n";
 
-        // Write found words in file
-        auto endOfPath = txtPath.erase(0,inPath.string().size());
-        auto outPath = outDir.string() + endOfPath;
-        if (prints) std::cout << "Writing (txt): " << outPath << std::endl;
-        fs::create_directories(fs::path(outPath).parent_path());
-        std::ofstream outFile(outPath);
-        std::ostream_iterator<std::string> output_iterator(outFile);
-        for (const auto & line : outLines) outFile << line << "\n";
-
-        pixDestroy(&image);
     }
 
 

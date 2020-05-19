@@ -49,7 +49,7 @@ class Generator(object):
         self.background_colors: [str] = ['b_black', 'b_green', 'b_red', 'b_blue', 'b_white']
         self.layouts = [e for e in Layout]
         self.content_types = ['bible', 'lorem', 'random'] # all of them use usernames
-        self.other_types = ['only_text', 'with_images']
+        self.other_types = ['images_only', 'only_text', 'with_images']
 
         self.word_list: [str] = prepare_words()
         self.bible_list: [str] = prepare_bible()
@@ -57,33 +57,51 @@ class Generator(object):
 
 
     def generate_html(self):
-        iterations = len(self.font_families) * len(self.font_sizes) * len(self.font_styles) * len(self.font_colors) * len(self.background_colors) * len(self.other_types) * len(self.layouts) * len(self.content_types)
+        iterations = (len(self.other_types)-1) * len(self.font_families) * len(self.font_sizes) * len(self.font_styles) * len(self.font_colors) * len(self.background_colors) * len(self.layouts) * len(self.content_types) + (len(self.background_colors) * len(self.layouts))
         curr_it = 0
         with progressbar.ProgressBar(max_value=iterations) as bar:
-            for font_family in self.font_families:
-                for font_size in self.font_sizes:
-                    for font_style in self.font_styles:
-                        for font_color in self.font_colors:
-                            for background_color in self.background_colors:
-                                for other_type in self.other_types:
-                                    for layout in self.layouts:
-                                        for content_type in self.content_types:
-                                                bar.update(curr_it)
-                                                curr_it += 1
-
-                                                self.prepare(
-                                                    font_family=font_family,
-                                                    font_size=font_size,
-                                                    font_style=font_style,
-                                                    font_color=font_color,
-                                                    background_color=background_color,
-                                                    layout=layout,
-                                                    content_type=content_type,
-                                                    other_type=other_type,
-                                                    )
+            for other_type in self.other_types:
+                if other_type == 'images_only':
+                    for background_color in self.background_colors:
+                        count: int = 0
+                        for layout in self.layouts:
+                            # Generate path
+                            file_path: str = self.save_directory + other_type + '/' + background_color + '/' + str(count)
+                            count += 1
+                            self.prepare(
+                                file_path=file_path,
+                                other_type=other_type,
+                                background_color=background_color,
+                                layout=layout,
+                                )
+                else:
+                    for font_family in self.font_families:
+                        for font_size in self.font_sizes:
+                            for font_style in self.font_styles:
+                                for font_color in self.font_colors:
+                                    for background_color in self.background_colors:
+                                            for layout in self.layouts:
+                                                for content_type in self.content_types:
+                                                    bar.update(curr_it)
+                                                    curr_it += 1
+                                                    # Generate path
+                                                    file_path: str = self.save_directory + font_family + '/' + font_size + '/' + font_style + '/' + font_color + '/' + '/' + background_color + '/' + other_type + '/' + layout.name + '/' + content_type
+                                                    self.prepare(
+                                                        file_path=file_path,
+                                                        other_type=other_type,
+                                                        font_family=font_family,
+                                                        font_size=font_size,
+                                                        font_style=font_style,
+                                                        font_color=font_color,
+                                                        background_color=background_color,
+                                                        layout=layout,
+                                                        content_type=content_type,
+                                                        )
 
 
     def prepare(self,
+        file_path: str='',
+        other_type: str='',
         font_family: str='',
         font_size: str='',
         font_style: str='',
@@ -91,11 +109,7 @@ class Generator(object):
         background_color: str='',
         layout: Layout=Layout.center,
         content_type: str='',
-        other_type: str=''
     ):
-
-        # Generate path
-        file_path: str = self.save_directory + font_family + '/' + font_size + '/' + font_style + '/' + font_color + '/' + '/' + background_color + '/' + other_type + '/' + layout.name + '/' + content_type
 
         if font_color[1:] == background_color[1:]:
             return
@@ -108,38 +122,46 @@ class Generator(object):
         background_images: [str] = ['']
 
         # Get words, sentences, paragraphs and usernames
-        if content_type == 'lorem':
-            for _ in range(10):
-                words.append(lorem.get_word())
-                sentences.append(lorem.get_sentence())
-                paragraphs.append(lorem.get_paragraph())
-                usernames.append(self.gen_username())
+        if other_type != 'images_only':
+            if content_type == 'lorem':
+                for _ in range(10):
+                    words.append(lorem.get_word())
+                    sentences.append(lorem.get_sentence())
+                    paragraphs.append(lorem.get_paragraph())
+                    usernames.append(self.gen_username())
 
-        elif content_type == 'bible':
-            for _ in range(10):
-                words.append(random.choice(self.word_list))
-                sentences.append(random.choice(self.bible_list))
-                temp_paragraph = ''
-                for _ in range(random.randint(2, 5)):
-                    temp_paragraph += random.choice(self.bible_list) + ' '
-                paragraphs.append(temp_paragraph)
-                usernames.append(self.gen_username())
+            elif content_type == 'bible':
+                for _ in range(10):
+                    words.append(random.choice(self.word_list))
+                    sentences.append(random.choice(self.bible_list))
+                    temp_paragraph = ''
+                    for _ in range(random.randint(2, 5)):
+                        temp_paragraph += random.choice(self.bible_list) + ' '
+                    paragraphs.append(temp_paragraph)
+                    usernames.append(self.gen_username())
 
-        elif content_type == 'random':
-            for _ in range(10):
-                words.append(self.gen_random_word())
-                sentences.append(self.gen_random_sentence())
-                paragraphs.append(self.gen_random_paragraph())
-                usernames.append(self.gen_username())
+            elif content_type == 'random':
+                for _ in range(10):
+                    words.append(self.gen_random_word())
+                    sentences.append(self.gen_random_sentence())
+                    paragraphs.append(self.gen_random_paragraph())
+                    usernames.append(self.gen_username())
+
+            # Remove firsts
+            words.pop(0)
+            sentences.pop(0)
+            paragraphs.pop(0)
+            usernames.pop(0)
+
+        else:
+            words = ['', '','','','','','','','','']
+            sentences = ['', '','','','','','','','','']
+            paragraphs = ['', '','','','','','','','','']
+            usernames = ['', '','','','','','','','','']
 
         # Get images
-        if other_type == 'with_images': background_images = self.get_images()
-
-        # Remove firsts
-        words.pop(0)
-        sentences.pop(0)
-        paragraphs.pop(0)
-        usernames.pop(0)
+        if other_type == 'with_images' or other_type == 'images_only':
+            background_images = self.get_images()
 
         # Generate and save document
         self.generate_file(
@@ -168,15 +190,15 @@ class Generator(object):
         font_style: str='',
         font_color: str='',
         background_color: str='',
-        background_images: [str]=[''],
+        background_images: [str]=[],
         layout: Layout=Layout.center
-        ):
+        ) -> None:
         doc = dominate.document(title='generated')
 
         indexes: [int] = []
         possible_indexes: [int] = [0,1,2,3,4,5,6,7,8]
         random.shuffle(possible_indexes)
-        for _ in range(len(background_images) - 1):
+        for _ in range(len(background_images)):
             indexes.append(possible_indexes.pop())
 
         with doc.head:
@@ -425,17 +447,17 @@ class Generator(object):
         global prints
         if prints: print('CREATED:  ' + path + '.html')
 
-    def get_images(self):
+    def get_images(self) -> [str]:
         imgs: [str] = ['']
 
         img_count: int = random.randint(1, 8)
 
         for _ in range(img_count):
             imgs.append(random.choice(self.img_list))
-
+        imgs.pop(0)
         return list(set(imgs))
 
-    def gen_username(self):
+    def gen_username(self) -> str:
         choice: int = random.randint(0, 3)
 
         username: str = ''
@@ -473,7 +495,7 @@ class Generator(object):
 
         return username
 
-    def gen_random_word(self):
+    def gen_random_word(self) -> str:
         letters: str = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890'
         letters_count: int = random.randint(3, 13)
 
@@ -484,7 +506,7 @@ class Generator(object):
 
         return word
 
-    def gen_random_sentence(self):
+    def gen_random_sentence(self) -> str:
         words_count: int = random.randint(3, 10)
         
         sentence: str = ''
@@ -494,7 +516,7 @@ class Generator(object):
 
         return sentence
 
-    def gen_random_paragraph(self):
+    def gen_random_paragraph(self) -> str:
             words_count: int = random.randint(3, 10)
             
             paragraph: str = ''
@@ -519,14 +541,14 @@ def str_to_span(content: str):
 
 
 # Creates word list from copy from '/user/share/dict/words'
-def prepare_words():
+def prepare_words() -> [str]:
     words: str = ''
     with open('resources/words', 'r') as f:
         words = f.read()
     return words.splitlines()
 
 # Extracts every sentence of the Bible (King James Translation)
-def prepare_bible():
+def prepare_bible() -> [str]:
     bible_list: [str] = ['']
     regex = r'([0-9]+\t[0-9]+\t\t[0-9]+\t)([a-zA-Z0-9.,\;\- ]*)'
 
@@ -540,10 +562,10 @@ def prepare_bible():
     del bible_list[0]
     return bible_list
 
-def prepare_imgs():
+def prepare_imgs() -> [str]:
     img_list: [str] = ['']
 
-    for path in Path('resources/imgs/unsplash').rglob('*.jpg'):
+    for path in Path('resources/imgs/').rglob('*.jpg'):
         img_list.append(os.path.abspath(path))
 
     return img_list

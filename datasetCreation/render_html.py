@@ -15,7 +15,6 @@ import progressbar
 data_list: str = 'path,word,left,top,width,height\n'
 
 prints: bool = False
-mk_csv: bool = False
 
 # Main function
 def main() -> None:
@@ -27,7 +26,7 @@ class Mediator(object):
     def __init__(self, browser: cef.PyBrowser) -> None:
         self.loaded: bool = False
         self.painted: bool = False
-        self.viewport_size: Tuple[int, int] = (1100, 800)
+        self.viewport_size: Tuple[int, int] = (1024, 768) # (1100, 800)
         self.browser: cef.PyBrowser = browser
         self.buffer: str = ''
         self.lock: asyncio.Lock = asyncio.Lock()
@@ -60,7 +59,6 @@ class Mediator(object):
     def save_image(self) -> bool:
         if self.painted and self.loaded:
             global prints
-            global mk_csv
 
             buffer_string = self.browser.GetUserData('OnPaint.buffer_string')
             rgba_image = Image.frombytes('RGBA', self.viewport_size, buffer_string, 'raw', 'RGBA', 0, 1)
@@ -74,13 +72,10 @@ class Mediator(object):
             self.loaded = False
             self.bar.update(self.count)
             self.count += 1
-            if self.count >= len(self.urls) and mk_csv:
-                with codecs.open(self.out_dir + 'data.csv', 'w', "utf-8") as f:
-                    f.write(data_list)
-                if prints: print('SAVED:  ' + 'data.csv')
+            if self.count >= len(self.urls):
                 if prints: print('Finished without error! (ignore the following output)')
                 if prints: print()
-                sys.exit()
+                sys.exit(1)
             self.next_url()
 
 class CefHandle(object):
@@ -182,14 +177,14 @@ class LoadHandler(object):
     #     if self.mediator.save_image():
     #         self.mediator.next_url()
 
-def save_data_csv(data) -> None:
-    global data_list
-    data_list += data
+# def save_data_csv(data) -> None:
+#     global data_list
+#     data_list += data
 
 def save_data_txt(value):
     path: str = value.split('\n')[0][8:]
     os.path.abspath('./')
-    term = 'OCROnWebpages\/html\/'
+    term = 'datasetCreation\/html\/'
     reg = '(' + term + ')(.*)'
     found = re.search(re.compile(reg),path).groups()[1]
 

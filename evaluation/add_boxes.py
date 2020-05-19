@@ -10,21 +10,24 @@ import progressbar
 prints: bool = False
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description='Evaluate the recognized dataset against the ideal dataset.')
+    parser = argparse.ArgumentParser(description='Add bounding boxes to image.')
     # Ideal Directory
-    parser.add_argument('input', metavar='input', type=str, nargs=1, help='a directories containing the ideal dataset')
-    # Recognized Directory
-    parser.add_argument('output', metavar='output', type=str, nargs=1, help='a directories containing the recognized dataset')
+    parser.add_argument('input_img', metavar='input_img', type=str, nargs=1, help='a directory containing the images')
+    # Label Directory
+    parser.add_argument('input_txt', metavar='input_txt', type=str, nargs=1, help='a directory containing the labels')
+    # Output Directory
+    parser.add_argument('output', metavar='output', type=str, nargs=1, help='a directory for the output')
 
     args = parser.parse_args()
 
     # INPUT FEEDBACK
     # Paths
-    input_path: Path = Path(args.input[0]).absolute()
+    input_img_path: Path = Path(args.input_img[0]).absolute()
+    input_txt_path: Path = Path(args.input_txt[0]).absolute()
     output_path: Path = Path(args.output[0]).absolute()
 
     root: Path = Path().absolute()
-    load_root = root.joinpath(input_path)
+    load_root = root.joinpath(input_img_path)
     print(str(load_root))
 
     files = []
@@ -40,9 +43,12 @@ def main() -> None:
         start = time.time()
 
         all_coordinates: [[int]] = []
-        with open(str(p).replace('.png', '.txt'), 'r') as f:
-            next(f)
+
+        txt_path: str = (str(p).replace(str(input_img_path), str(input_txt_path))).replace('.png', '.txt')
+        with open(txt_path, 'r') as f:
             for l in f:
+                if 'file://' in l:
+                    continue
                 coordinate_tuple: [int] = []
                 coordinates = re.search(r'([0-9]+),([0-9]+),([0-9]+),([0-9]+)', l).groups()
                 for coordinate in coordinates:
@@ -57,7 +63,7 @@ def main() -> None:
             (left, top, width, height) = coordinate_tuple 
             cv2.rectangle(img, (left, top), (left + width, top + height), (0, 255, 0), 2)
 
-        save_path = str(p).replace(str(input_path), str(output_path))
+        save_path = str(p).replace(str(input_img_path), str(output_path))
         Path(save_path).parent.mkdir(parents=True, exist_ok=True)
         plt.imsave(save_path, img)
         end = time.time()
