@@ -88,8 +88,9 @@ int main (int argc, char *argv[]) {
                 api->SetRectangle(left, top, width, height);
                 
                 // Get OCR result
-                std::string outText;
-                outText = api->GetUTF8Text();
+                char* result = api->GetUTF8Text();
+                std::string outText(result);
+                delete[] result;
 
                 // Create Output
                 if (outText.length() > 2)
@@ -99,14 +100,14 @@ int main (int argc, char *argv[]) {
             }
             pixDestroy(&image);
         }
-            // Write found words in file
-            // auto endOfPath = txtPath.erase(0, inPath_img.string().size());
-            auto outPath = outDir.string() + endOfPath;
-            if (prints) std::cout << "Writing (txt): " << outPath << std::endl;
-            fs::create_directories(fs::path(outPath).parent_path());
-            std::ofstream outFile(outPath);
-            std::ostream_iterator<std::string> output_iterator(outFile);
-            for (const auto & line : outLines) outFile << line << "\n";
+        // Write found words in file
+        // auto endOfPath = txtPath.erase(0, inPath_img.string().size());
+        auto outPath = outDir.string() + endOfPath;
+        if (prints) std::cout << "Writing (txt): " << outPath << std::endl;
+        fs::create_directories(fs::path(outPath).parent_path());
+        std::ofstream outFile(outPath);
+        std::ostream_iterator<std::string> output_iterator(outFile);
+        for (const auto & line : outLines) outFile << line << "\n";
 
     }
 

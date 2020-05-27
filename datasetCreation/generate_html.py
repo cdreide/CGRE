@@ -119,7 +119,7 @@ class Generator(object):
         sentences: [str] = ['']
         paragraphs: [str] = ['']
         usernames: [str] = ['']
-        background_images: [str] = ['']
+        background_images: [str] = []
 
         # Get words, sentences, paragraphs and usernames
         if other_type != 'images_only':
@@ -203,7 +203,6 @@ class Generator(object):
 
         with doc.head:
             link(rel='stylesheet', href=os.path.abspath('style.css'))
-            script(type='text/javascript', src=os.path.abspath('script.js'))
 
         with doc.body:
             with div(cls='grid' + ' ' + font_family + ' ' + font_size + ' ' + font_style + ' ' + font_color):
@@ -434,6 +433,27 @@ class Generator(object):
                         div(cls='cell ' + background_color).add(str_to_span(words[8]))
                     else:
                         div(cls='cell ').add(img(cls='img', src=background_images.pop()))
+
+
+            script(type='text/javascript', src=os.path.abspath('script.js'))
+
+            # js_hideElements: str = '(function() { \
+            #         let spans = document.getElementsByTagName("span"); \
+            #         for (i = 0; i < spans.length; i++) { \
+            #             if (!spans[i].innerText.match(/^[a-zA-Z0-9]+/)) { \
+            #                 continue; \
+            #             } \
+            #             let spanRect = spans[i].getBoundingClientRect() \
+            #             let divRect = spans[i].parentNode.parentNode.getBoundingClientRect() \
+            #             if (!(spanRect.top <= divRect.top + divRect.height && \
+            #                 spanRect.left <= divRect.left + divRect.width && \
+            #                 spanRect.top + spanRect.height <= divRect.top + divRect.height && \
+            #                 spanRect.left + spanRect.width <= divRect.left + divRect.width)) { \
+            #                     spans[i].setAttribute("style", "display: none;"); \
+            #             } \
+            #         } \
+            #     })();'
+            # script(js_hideElements)
 
         out_path: str = ''
 

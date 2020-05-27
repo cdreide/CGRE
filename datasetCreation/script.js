@@ -1,12 +1,31 @@
-// word\t(left,top,width,height)\n
+// Hide unwanted elements
+(function() {
+    let spans = document.getElementsByTagName("span");
+    for (i = 0; i < spans.length; i++) {
+        if (!spans[i].innerText.match(/^[a-zA-Z0-9]+/)) {
+            continue;
+        }
+        let spanRect = spans[i].getBoundingClientRect()
+        let divRect = spans[i].parentNode.parentNode.getBoundingClientRect()
+        if (!(spanRect.top <= divRect.top + divRect.height &&
+            spanRect.left <= divRect.left + divRect.width &&
+            spanRect.top + spanRect.height <= divRect.top + divRect.height &&
+            spanRect.left + spanRect.width <= divRect.left + divRect.width)) {
+                spans[i].setAttribute("style", "display: none;");
+        }
+    }
+})();
 
+
+
+// word\t(left,top,width,height)\n
 function get_data_txt() {
     let output = window.location.href + '\n';
     let spans = document.getElementsByTagName('span');
     for(i = 0; i < spans.length; i++) {
         let spanRect = spans[i].getBoundingClientRect()
         let divRect = spans[i].parentNode.parentNode.getBoundingClientRect()
-        console.log(divRect);
+        // console.log(divRect);
         if (spanRect.top <= divRect.top + divRect.height &&
             spanRect.left <= divRect.left + divRect.width &&
             spanRect.top + spanRect.height <= divRect.top + divRect.height &&

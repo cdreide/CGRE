@@ -91,8 +91,9 @@ def main() -> None:
         recognized: Line = [{'word': '', 'left': '', 'top': '', 'width': '', 'height': ''}]
 
         with open(str(ideal_file_path), 'r') as f:
-            # print('load:\t' + str(ideal_file_path))
+            print('load:\t' + str(ideal_file_path))
             for line in f:
+                # print(line)
                 if len(line) <= 1 or 'file:///' in line:
                     continue
                 else:
@@ -101,7 +102,7 @@ def main() -> None:
                         del ideal[0]
                         first_ideal = False
         with open(recognized_file_path, 'r') as f:
-            # print('load:\t' + recognized_file_path)
+            print('load:\t' + recognized_file_path)
             for line in f:
                 if len(line) <= 1 or 'file:///' in line:
                     continue
