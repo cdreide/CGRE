@@ -80,23 +80,23 @@ class Generator(object):
                             for font_style in self.font_styles:
                                 for font_color in self.font_colors:
                                     for background_color in self.background_colors:
-                                            for layout in self.layouts:
-                                                for content_type in self.content_types:
-                                                    bar.update(curr_it)
-                                                    curr_it += 1
-                                                    # Generate path
-                                                    file_path: str = self.save_directory + font_family + '/' + font_size + '/' + font_style + '/' + font_color + '/' + '/' + background_color + '/' + other_type + '/' + layout.name + '/' + content_type
-                                                    self.prepare(
-                                                        file_path=file_path,
-                                                        other_type=other_type,
-                                                        font_family=font_family,
-                                                        font_size=font_size,
-                                                        font_style=font_style,
-                                                        font_color=font_color,
-                                                        background_color=background_color,
-                                                        layout=layout,
-                                                        content_type=content_type,
-                                                        )
+                                        for layout in self.layouts:
+                                            for content_type in self.content_types:
+                                                bar.update(curr_it)
+                                                curr_it += 1
+                                                # Generate path
+                                                file_path: str = self.save_directory + other_type + '/' + font_family + '/' + font_size + '/' + font_style + '/' + font_color + '/' + '/' + background_color + '/' + layout.name + '/' + content_type
+                                                self.prepare(
+                                                    file_path=file_path,
+                                                    other_type=other_type,
+                                                    font_family=font_family,
+                                                    font_size=font_size,
+                                                    font_style=font_style,
+                                                    font_color=font_color,
+                                                    background_color=background_color,
+                                                    layout=layout,
+                                                    content_type=content_type,
+                                                    )
 
 
     def prepare(self,
