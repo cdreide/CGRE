@@ -28,33 +28,31 @@ p {
 }
 
 /* Font Families */
+.sans-serif {
+    font-family: sans-serif;
+}
+
 .arial {
-    font-family: Arial;
+    font-family: arial;
 }
 
-.verdana {
-    font-family: Verdana;
-}
-
-.georgia {
-    font-family: Georgia;
+.helvetica {
+    font-family: helvetica;
 }
 
 /* Font Sizes */
-.six {
+.fs_12 {
     font-size: 6px;
 }
 
-.ten {
+.fs_14 {
     font-size: 10px;
 }
 
-.sixteen {
+.fs_16 {
     font-size: 16px;
 }
-.nineteen {
-    font-size: 19px;
-}
+
 /* Font Styles */
 .normal {
     font-style: normal;
@@ -73,45 +71,30 @@ p {
 }
 
 /* Font Colors */
-.f_black {
-    color: black;
+.fc_0_0_0 {
+    color: rgb(0, 0, 0);
 }
 
-.f_green {
-    color: green;
+.fc_51_51_51 {
+    color: rgb(51, 51, 51);
 }
 
-.f_red {
-    color: red;
-}
-
-.f_blue {
-    color: blue;
-}
-
-.f_white {
-    color: white;
+.fc_102_102_102 {
+    color: rgb(102, 102, 102);
 }
 
 /* Background Colors */
-.b_black {
-    background: black;
+
+.bc_255_255_255 {
+    background: rgb(255, 255, 255);
 }
 
-.b_green {
-    background: green;
+.bc_0_0_0 {
+    background: rgb(0, 0, 0);
 }
 
-.b_red {
-    background: red;
-}
-
-.b_blue {
-    background: blue;
-}
-
-.b_white {
-    background: white;
+.bc_224_224_224 {
+    background: rgb(224, 224, 224);
 }
 
 /* IMAGE */

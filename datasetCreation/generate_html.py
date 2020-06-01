@@ -42,11 +42,11 @@ class Generator(object):
         if not os.path.isdir(self.save_directory):
             os.mkdir(self.save_directory)
 
-        self.font_families: [str] = ['arial', 'verdana', 'georgia']
-        self.font_sizes: [str] = ['six', 'ten', 'sixteen']
+        self.font_families: [str] = ['sans-serif', 'arial', 'helvetica']
+        self.font_sizes: [str] = ['fs_12', 'fs_14', 'fs_16']
         self.font_styles: [str] = ['normal', 'italic', 'bold', 'underline']
-        self.font_colors: [str] = ['f_black', 'f_green', 'f_red', 'f_blue', 'f_white']
-        self.background_colors: [str] = ['b_black', 'b_green', 'b_red', 'b_blue', 'b_white']
+        self.font_colors: [str] = ['fc_0_0_0', 'fc_51_51_51', 'fc_102_102_102']
+        self.background_colors: [str] = ['bc_255_255_255', 'bc_0_0_0', 'bc_224_224_224']
         self.layouts = [e for e in Layout]
         self.content_types = ['bible', 'lorem', 'random'] # all of them use usernames
         self.other_types = ['images_only', 'only_text', 'with_images']
