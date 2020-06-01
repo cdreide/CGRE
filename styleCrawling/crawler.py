@@ -99,7 +99,7 @@ background_color_dict: [str] = {}
 rgba_reg = r'rgba\(\d*, \d*, \d*, [\d\.]*\)'
 rgb_reg = r'rgb\(\d*, \d*, \d*\)'
 
-for page in results:
+for page in log:
     if page['status'] == 'fail':
         failed.append(page['url'])
         continue
@@ -142,10 +142,15 @@ for page in results:
         else:
             font_style_dict[font_style_clean] += page['font_style'][font_style]
     for font_color in page['font_color']:
-        if font_color.lower() not in font_color_dict:
-            font_color_dict[font_color.lower()] = page['font_color'][font_color]
+        if 'rgba' in font_color and ', 0)' in font_color:
+            font_color_clean = 'rgb(255, 255, 255)'
+        else: 
+            font_color_clean = font_color.lower()
+
+        if font_color_clean not in font_color_dict:
+            font_color_dict[font_color_clean] = page['font_color'][font_color]
         else:
-            font_color_dict[font_color.lower()] += page['font_color'][font_color]
+            font_color_dict[font_color_clean] += page['font_color'][font_color]
     for background_color in page['background_color']:
         
         # TODO: wenn background image -> color nehmen oder ignorieren?
@@ -155,14 +160,21 @@ for page in results:
 
         found = re.findall(rgba_reg, background_color.lower())
         found += re.findall(rgb_reg, background_color.lower())
-
+        
         if len(found) <= 0:
             continue
 
-        if found[0] not in background_color_dict:
-            background_color_dict[found[0]] = page['background_color'][background_color]
+        if 'rgba' in found[0] and ', 0)' in found[0]:
+            background_color_clean = 'rgb(255, 255, 255)'
+        else: 
+            background_color_clean = found[0].lower()
+
+        if background_color_clean not in background_color_dict:
+            background_color_dict[background_color_clean] = page['background_color'][background_color]
         else:
-            background_color_dict[found[0]] += page['background_color'][background_color]
+            background_color_dict[background_color_clean] += page['background_color'][background_color]
+
+
 
 
 font_family_dict = {k: v for k, v in sorted(font_family_dict.items(), key=lambda item: item[1], reverse=True)}
@@ -183,6 +195,6 @@ log = {
 
 
 # print(font_color_dict)
-with open('log_clean', 'w') as f:
+with open('log_clean_example', 'w') as f:
     f.write(json.dumps(log, indent=4))
     f.write('\n')
