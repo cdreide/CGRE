@@ -108,12 +108,12 @@ for page in log:
 
     # print(page['url'])
     for font_family in page['font_family']:
-        for font in font_family.split(', '):
-            font = font.replace('\"', '').lower()
-            if font not in font_family_dict:
-                font_family_dict[font] = page['font_family'][font_family]
-            else:
-                font_family_dict[font] += page['font_family'][font_family]
+        font = font_family.split(', ')[0]
+        font = font.replace('\"', '').lower()
+        if font not in font_family_dict:
+            font_family_dict[font] = page['font_family'][font_family]
+        else:
+            font_family_dict[font] += page['font_family'][font_family]
     for font_size in page['font_size']:
         if font_size.lower() not in font_size_dict:
             font_size_dict[font_size.lower()] = page['font_size'][font_size]
