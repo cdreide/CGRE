@@ -99,7 +99,7 @@ background_color_dict: [str] = {}
 rgba_reg = r'rgba\(\d*, \d*, \d*, [\d\.]*\)'
 rgb_reg = r'rgb\(\d*, \d*, \d*\)'
 
-for page in log:
+for page in results:
     if page['status'] == 'fail':
         failed.append(page['url'])
         continue
