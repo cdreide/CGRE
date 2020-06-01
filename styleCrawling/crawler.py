@@ -130,8 +130,8 @@ for page in results:
         #     else:
         #         font_color_dict[color.lower()] += page['font_style'][font_style]
 
-        # font_style_clean = re.sub(rgba_reg, '', re.sub(rgb_reg, '', font_style)).lower()
-        font_style_clean = font_style.lower()
+        font_style_clean = re.sub(rgba_reg, '', re.sub(rgb_reg, '', font_style)).lower()
+        # font_style_clean = font_style.lower()
         if 'none' in font_style_clean or '400' in font_style_clean:
             font_style_clean = 'normal'
         if 'none' in font_style_clean:
