@@ -190,7 +190,7 @@ def main() -> None:
     recall_l: float = -1.0
     fone_score_l: float = -1.0
     try:
-        accuracy_l = (overall_TP_l) / (overall_TP_l + overall_FP_l + overall_FN_l) # is this ok?
+        accuracy_l = (overall_TP_l) / (overall_TP_l + overall_FP_l + overall_FN_l)
     except:
         pass
     try:
@@ -212,7 +212,7 @@ def main() -> None:
     recall_d: float = -1.0
     fone_score_d: float = -1.0
     try:
-        accuracy_d = (overall_TP_d) / (overall_TP_d + overall_FP_d + overall_FN_d) # is this ok?
+        accuracy_d = (overall_TP_d) / (overall_TP_d + overall_FP_d + overall_FN_d)
     except:
         pass
     try:

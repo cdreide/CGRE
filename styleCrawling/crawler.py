@@ -6,7 +6,7 @@ import pprint
 pre: str = 'http://'
 urls: [str] = []
 
-with open('resources/urls', 'r') as f:
+with open('resources/urls_us', 'r') as f:
     for url in f:
         if not pre in url:
             url = pre + url
@@ -23,17 +23,21 @@ for url in urls:
             let font_style_list = [];
             let font_color_list = [];
             let background_color_list = [];
+            let total = 0;
             let all = document.getElementsByTagName("*");
 
             let max = all.length;
             for (var i=0; i < max; i++) {
-                font_family_list.push(window.getComputedStyle(all[i]).getPropertyValue("font-family"));
-                font_size_list.push(window.getComputedStyle(all[i]).getPropertyValue("font-size"));
-                font_style_list.push(window.getComputedStyle(all[i]).getPropertyValue("font-style"));
-                font_style_list.push(window.getComputedStyle(all[i]).getPropertyValue("font-weight"));
-                font_style_list.push(window.getComputedStyle(all[i]).getPropertyValue("text-decoration"));
-                font_color_list.push(window.getComputedStyle(all[i]).getPropertyValue("color"));
-                background_color_list.push(window.getComputedStyle(all[i]).getPropertyValue("background"));
+                if (all[i].textContent.length > 0) {
+                    font_family_list.push(window.getComputedStyle(all[i]).getPropertyValue("font-family"));
+                    font_size_list.push(window.getComputedStyle(all[i]).getPropertyValue("font-size"));
+                    font_style_list.push(window.getComputedStyle(all[i]).getPropertyValue("font-style"));
+                    font_style_list.push(window.getComputedStyle(all[i]).getPropertyValue("font-weight"));
+                    font_style_list.push(window.getComputedStyle(all[i]).getPropertyValue("text-decoration"));
+                    font_color_list.push(window.getComputedStyle(all[i]).getPropertyValue("color"));
+                    background_color_list.push(window.getComputedStyle(all[i]).getPropertyValue("background"));
+                    total++;
+                }
             }
 
             const getOccurences = (list) => {
@@ -49,7 +53,8 @@ for url in urls:
                 font_style: getOccurences(font_style_list),
                 font_color: getOccurences(font_color_list),
                 background_color: getOccurences(background_color_list),
-                status: 'success'
+                status: 'success',
+                total: total
             }
         }
     """
@@ -80,14 +85,22 @@ for url in urls:
     results.append(res)
     # pprint.pprint(res, width=1)
 
-print('Done!')
 
-with open('log', 'w') as f:
-    f.write(json.dumps(results))
+with open('log.json', 'w') as f:
+    f.write(json.dumps(results, indent=4))
     f.write('\n')
 
 
 # Processing
+def merge_dicts(total_dict, new_dict):
+    for key in new_dict.keys():
+        if key not in total_dict.keys():
+            total_dict[key] = new_dict[key]
+        else:
+            total_dict[key] += new_dict[key]
+
+    return total_dict
+
 failed: [str] = []
 succeeded: [str] = []
 font_family_dict: [str] = {}
@@ -100,57 +113,64 @@ rgba_reg = r'rgba\(\d*, \d*, \d*, [\d\.]*\)'
 rgb_reg = r'rgb\(\d*, \d*, \d*\)'
 
 for page in results:
+    tmp_font_family_dict: [str] = {}
+    tmp_font_size_dict: [str] = {}
+    tmp_font_style_dict: [str] = {}
+    tmp_font_color_dict: [str] = {}
+    tmp_background_color_dict: [str] = {}
+    
     if page['status'] == 'fail':
         failed.append(page['url'])
         continue
 
+    total: float = float(page['total'])
     succeeded.append(page['url'])
 
     # print(page['url'])
     for font_family in page['font_family']:
         font = font_family.split(', ')[0]
         font = font.replace('\"', '').lower()
-        if font not in font_family_dict:
-            font_family_dict[font] = page['font_family'][font_family]
+        if font not in tmp_font_family_dict:
+            tmp_font_family_dict[font] = page['font_family'][font_family]
         else:
-            font_family_dict[font] += page['font_family'][font_family]
+            tmp_font_family_dict[font] += page['font_family'][font_family]
     for font_size in page['font_size']:
-        if font_size.lower() not in font_size_dict:
-            font_size_dict[font_size.lower()] = page['font_size'][font_size]
+        if font_size.lower() not in tmp_font_size_dict:
+            tmp_font_size_dict[font_size.lower()] = page['font_size'][font_size]
         else:
-            font_size_dict[font_size.lower()] += page['font_size'][font_size]
+            tmp_font_size_dict[font_size.lower()] += page['font_size'][font_size]
     for font_style in page['font_style']:
 
         # sometimes there is color in style:
         # found = re.findall(rgba_reg, font_style.lower())
         # found += re.findall(rgb_reg, font_style.lower())
         # for color in found:
-        #     if color.lower() not in font_color_dict:
-        #         font_color_dict[color.lower()] = page['font_style'][font_style]
+        #     if color.lower() not in tmp_font_color_dict:
+        #         tmp_font_color_dict[color.lower()] = page['font_style'][font_style]
         #     else:
-        #         font_color_dict[color.lower()] += page['font_style'][font_style]
+        #         tmp_font_color_dict[color.lower()] += page['font_style'][font_style]
 
         font_style_clean = re.sub(rgba_reg, '', re.sub(rgb_reg, '', font_style)).lower()
         # font_style_clean = font_style.lower()
         if 'none' in font_style_clean or '400' in font_style_clean:
             font_style_clean = 'normal'
         if 'none' in font_style_clean:
-                    font_style_clean = 'normal'
+            font_style_clean = 'normal'
 
-        if font_style_clean not in font_style_dict:
-            font_style_dict[font_style_clean] = page['font_style'][font_style]
+        if font_style_clean not in tmp_font_style_dict:
+            tmp_font_style_dict[font_style_clean] = page['font_style'][font_style]
         else:
-            font_style_dict[font_style_clean] += page['font_style'][font_style]
+            tmp_font_style_dict[font_style_clean] += page['font_style'][font_style]
     for font_color in page['font_color']:
         if 'rgba' in font_color and ', 0)' in font_color:
             font_color_clean = 'rgb(255, 255, 255)'
         else: 
             font_color_clean = font_color.lower()
 
-        if font_color_clean not in font_color_dict:
-            font_color_dict[font_color_clean] = page['font_color'][font_color]
+        if font_color_clean not in tmp_font_color_dict:
+            tmp_font_color_dict[font_color_clean] = page['font_color'][font_color]
         else:
-            font_color_dict[font_color_clean] += page['font_color'][font_color]
+            tmp_font_color_dict[font_color_clean] += page['font_color'][font_color]
     for background_color in page['background_color']:
         
         # TODO: wenn background image -> color nehmen oder ignorieren?
@@ -169,19 +189,35 @@ for page in results:
         else: 
             background_color_clean = found[0].lower()
 
-        if background_color_clean not in background_color_dict:
-            background_color_dict[background_color_clean] = page['background_color'][background_color]
+        if background_color_clean not in tmp_background_color_dict:
+            tmp_background_color_dict[background_color_clean] = page['background_color'][background_color]
         else:
-            background_color_dict[background_color_clean] += page['background_color'][background_color]
+            tmp_background_color_dict[background_color_clean] += page['background_color'][background_color]
 
+    tmp_font_family_dict_total: float = float(sum(list(tmp_font_family_dict.values())))
+    tmp_font_size_dict_total: float = float(sum(list(tmp_font_size_dict.values())))
+    tmp_font_style_dict_total: float = float(sum(list(tmp_font_style_dict.values())))
+    tmp_font_color_dict_total: float = float(sum(list(tmp_font_color_dict.values())))
+    tmp_background_color_dict_total: float = float(sum(list(tmp_background_color_dict.values())))
+    tmp_font_family_dict = {k: v / tmp_font_family_dict_total for k, v in tmp_font_family_dict.items()}
+    tmp_font_size_dict = {k: v / tmp_font_size_dict_total for k, v in tmp_font_size_dict.items()}
+    tmp_font_style_dict = {k: v / tmp_font_style_dict_total for k, v in tmp_font_style_dict.items()}
+    tmp_font_color_dict = {k: v / tmp_font_color_dict_total for k, v in tmp_font_color_dict.items()}
+    tmp_background_color_dict = {k: v / tmp_background_color_dict_total for k, v in tmp_background_color_dict.items()}
 
+    font_family_dict = merge_dicts(font_family_dict, tmp_font_family_dict)
+    font_size_dict = merge_dicts(font_size_dict, tmp_font_size_dict)
+    font_style_dict = merge_dicts(font_style_dict, tmp_font_style_dict)
+    font_color_dict = merge_dicts(font_color_dict, tmp_font_color_dict)
+    background_color_dict = merge_dicts(background_color_dict, tmp_background_color_dict)
 
-
-font_family_dict = {k: v for k, v in sorted(font_family_dict.items(), key=lambda item: item[1], reverse=True)}
-font_size_dict = {k: v for k, v in sorted(font_size_dict.items(), key=lambda item: item[1], reverse=True)}
-font_style_dict = {k: v for k, v in sorted(font_style_dict.items(), key=lambda item: item[1], reverse=True)}
-font_color_dict = {k: v for k, v in sorted(font_color_dict.items(), key=lambda item: item[1], reverse=True)}
-background_color_dict = {k: v for k, v in sorted(background_color_dict.items(), key=lambda item: item[1], reverse=True)}
+# Sort the data in descending order by occurences
+total: float = float(len(succeeded))
+font_family_dict = {k: v / total for k, v in sorted(font_family_dict.items(), key=lambda item: item[1], reverse=True)}
+font_size_dict = {k: v / total for k, v in sorted(font_size_dict.items(), key=lambda item: item[1], reverse=True)}
+font_style_dict = {k: v / total for k, v in sorted(font_style_dict.items(), key=lambda item: item[1], reverse=True)}
+font_color_dict = {k: v / total for k, v in sorted(font_color_dict.items(), key=lambda item: item[1], reverse=True)}
+background_color_dict = {k: v / total for k, v in sorted(background_color_dict.items(), key=lambda item: item[1], reverse=True)}
 
 log = {
     'succeeded': succeeded,
@@ -195,6 +231,8 @@ log = {
 
 
 # print(font_color_dict)
-with open('log_clean_example', 'w') as f:
+with open('log_clean_example.json', 'w') as f:
     f.write(json.dumps(log, indent=4))
     f.write('\n')
+
+print('Done!')
