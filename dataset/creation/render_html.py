@@ -1,3 +1,4 @@
+from optparse import OptionParser
 from cefpython3 import cefpython as cef
 import os
 from pathlib import Path
@@ -12,27 +13,37 @@ import csv
 import codecs
 import progressbar
 
-data_list: str = 'path,word,left,top,width,height\n'
-
-prints: bool = False
 
 # Main function
 def main() -> None:
+    parser = OptionParser()
+    parser.add_option( '-i',
+                    '--in',
+                    dest = 'in_path',
+                    metavar = 'FILE' )
+    parser.add_option( '-o',
+                '--out',
+                dest = 'out_path',
+                metavar = 'FILE' )
+    (options, args) = parser.parse_args()
 
+    render_html(options.in_path, options.out_path)
+
+def render_html() -> None:
     cef_handle = CefHandle()
-    cef_handle.run_cef()
+    cef_handle.run_cef(in_path, out_path)
 
 class Mediator(object):
-    def __init__(self, browser: cef.PyBrowser) -> None:
+    def __init__(self, browser: cef.PyBrowser, in_path: str, out_path: str) -> None:
         self.loaded: bool = False
         self.painted: bool = False
         self.viewport_size: Tuple[int, int] = (1024, 768) # (1100, 800)
         self.browser: cef.PyBrowser = browser
         self.buffer: str = ''
         self.lock: asyncio.Lock = asyncio.Lock()
-        self.in_dir: str = 'html/'
-        self.out_dir: str = './dataset/'
-        self.current_file: str = 'index.html'
+        self.in_dir: str = in_path
+        self.out_dir: str = out_path
+        self.current_file: str = ''
         Path(self.out_dir).mkdir(parents=True, exist_ok=True)
         self.urls: [str] = ['']
 
@@ -46,11 +57,8 @@ class Mediator(object):
         return self.urls[self.count]
 
     def next_url(self) -> None:
-        #print('count: ' + str(self.count))
         if self.count < len(self.urls):
             self.browser.StopLoad()
-            global prints
-            if prints: print('RENDER:  "' + self.urls[self.count] + '"')
             reg_ex = '(?<='+ self.in_dir + ').*'
             self.current_file = re.search(re.compile(reg_ex), self.urls[self.count]).group()[:-5]
             self.browser.LoadUrl(self.urls[self.count])
@@ -58,8 +66,6 @@ class Mediator(object):
 
     def save_image(self) -> bool:
         if self.painted and self.loaded:
-            global prints
-
             buffer_string = self.browser.GetUserData('OnPaint.buffer_string')
             rgba_image = Image.frombytes('RGBA', self.viewport_size, buffer_string, 'raw', 'RGBA', 0, 1)
             rgb_image = rgba_image.convert('RGB')
@@ -67,20 +73,17 @@ class Mediator(object):
             real_out_dir: str = re.search(r'(.*[\/])', self.out_dir + self.current_file).group()
             Path(real_out_dir).mkdir(parents=True, exist_ok=True)
             rgb_image.save(self.out_dir + self.current_file + '.png', 'PNG', dpi=(self.viewport_size[0], self.viewport_size[1]))
-            if prints: print('SAVE:    "' + self.out_dir + self.current_file + '.png"')   # relative to self.real_out_dir
             self.painted = False
             self.loaded = False
             self.bar.update(self.count)
             self.count += 1
             if self.count >= len(self.urls):
-                if prints: print('Finished without error! (ignore the following output)')
-                if prints: print()
                 sys.exit(1)
             self.next_url()
 
 class CefHandle(object):
 
-    def run_cef(self) -> None:
+    def run_cef(self, in_path: str, out_path: str) -> None:
 
         # Setup CEF
         sys.excepthook = cef.ExceptHook  # to shutdown all CEF processes on error
@@ -99,7 +102,7 @@ class CefHandle(object):
         }
         cef.Initialize(settings=settings, switches=switches)
         print()
-        browser = self.create_browser(browser_settings)
+        browser = self.create_browser(browser_settings, in_path, out_path)
 
         bindings = cef.JavascriptBindings()
         bindings.SetFunction("save_data", save_data_txt)
@@ -112,14 +115,14 @@ class CefHandle(object):
         cef.Shutdown()
 
     # Create a browser
-    def create_browser(self, settings) -> None:
+    def create_browser(self, settings, in_path: str, out_path: str) -> None:
 
         parent_window_handle: int = 0
         window_info: cef.WindowInfo = cef.WindowInfo()
         window_info.SetAsOffscreen(parent_window_handle)
         browser: cef.PyBrowser = cef.CreateBrowserSync(window_info=window_info, settings=settings, url='')
         
-        mediator: Mediator = Mediator(browser)
+        mediator: Mediator = Mediator(browser, in_path, out_path)
         mediator.next_url()
 
         browser.SetClientHandler(LoadHandler(mediator))
@@ -170,17 +173,6 @@ class LoadHandler(object):
 
             self.mediator.save_image()
 
-
-    # def OnLoadingStateChange(self, browser: cef.PyBrowser, **_):
-    #     print('OnLoad')
-    #     self.mediator.loaded = True
-    #     if self.mediator.save_image():
-    #         self.mediator.next_url()
-
-# def save_data_csv(data) -> None:
-#     global data_list
-#     data_list += data
-
 def save_data_txt(value):
     path: str = value.split('\n')[0][8:]
     os.path.abspath('./')
@@ -198,8 +190,6 @@ def save_data_txt(value):
     Path(out_dir).mkdir(parents=True, exist_ok=True)
     with codecs.open('dataset/' + found_path_name + '.txt', 'w', "utf-8") as f:
         f.write(value)
-    global prints
-    if prints: print('SAVE:    ' + out_dir + '.txt')
 
 if __name__ == '__main__':
     main()

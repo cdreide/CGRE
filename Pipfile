@@ -17,6 +17,7 @@ pandas = "*"
 htmlmin = "*"
 requests-html = "*"
 selenium = "*"
+setuptools = "*"
 
 [dev-packages]
 pylint = "*"

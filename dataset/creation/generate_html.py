@@ -1,3 +1,4 @@
+from optparse import OptionParser
 import os
 from pathlib import Path
 import sys
@@ -9,24 +10,47 @@ import re
 from enum import Enum
 import progressbar
 import codecs
+import json
 import random
+import shutil
 
 # html/font_family/font_size/font_style/layout
 
-prints: bool = False
-
 def main() -> None:
-    html: str = './html/'
-    generator: Generator = Generator()
-    # for i in range(0, 10):
-    #     generator.save_directory: str = './html/' + str(i) + '/'
-    #     generator.generate_html()
+    parser = OptionParser()
+    parser.add_option( '-c',
+                '--crawled',
+                dest = 'crawl_data_path',
+                metavar = 'FILE' )
+    parser.add_option( '-t',
+                '--top',
+                dest = 'top_values',
+                default = 1,
+                metavar = 'INT' )
+    parser.add_option( '-o',
+                '--out',
+                dest = 'out_path',
+                metavar = 'FOLDER' )
+    (options, args) = parser.parse_args()
+
+    generate_html(Path(options.crawl_data_path), int(options.top_values), Path(options.out_path))
+
+def generate_html(crawl_data_path: Path, top_values: int, out_path: Path) -> None:
+    crawl_data: dict = {}
+    tmp_data: dict = {}
+    with open(crawl_data_path) as f:
+        tmp_data = json.load(f)
+
+    for category in tmp_data.keys():
+        if not isinstance(tmp_data[category], dict):
+            continue
+        crawl_data[category] = list(tmp_data[category].keys())[0:top_values]
+
+    generator: Generator = Generator(crawl_data, out_path)
+
     print('Create Dataset:')
-    generator.save_directory: str = html
+    generator.save_directory: str = out_path
     generator.generate_html()
-    # print('Create Test:')
-    # generator.save_directory: str = html + '1/'
-    # generator.generate_html()
 
 class Layout(Enum):
     center = 1
@@ -37,23 +61,31 @@ class Layout(Enum):
     words = 6
 
 class Generator(object):
-    def __init__(self):
-        self.save_directory: str = './html/'
-        if not os.path.isdir(self.save_directory):
-            os.mkdir(self.save_directory)
+    def __init__(self, crawl_data: dict, out_path: Path):
+        self.save_directory: Path = out_path
+        self.misc_path: Path = self.save_directory.joinpath('misc')
+        self.misc_path.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile('style.css', self.misc_path.joinpath('style.css'))
+        shutil.copyfile('script.js', self.misc_path.joinpath('script.js'))
+        self.img_path: Path = self.misc_path.joinpath('imgs')
+        if self.img_path.exists():
+            shutil.rmtree(self.img_path)
+        shutil.copytree(Path('resources/imgs/'), self.img_path)
 
-        self.font_families: [str] = ['sans-serif', 'arial', 'helvetica']
-        self.font_sizes: [str] = ['fs_12', 'fs_14', 'fs_16']
-        self.font_styles: [str] = ['normal', 'italic', 'bold', 'underline']
-        self.font_colors: [str] = ['fc_0_0_0', 'fc_51_51_51', 'fc_102_102_102']
-        self.background_colors: [str] = ['bc_255_255_255', 'bc_0_0_0', 'bc_224_224_224']
+        self.font_families: [str] = crawl_data['font_family_dict']
+        self.font_sizes: [str] = crawl_data['font_size_dict']
+        self.font_styles: [str] = crawl_data['font_style_dict']
+        # self.font_weights: [str] = crawl_data['font_weight_dict']
+        # self.text_decorations: [str] = crawl_data['text_decoration_dict']
+        self.font_colors: [str] = crawl_data['font_color_dict']
+        self.background_colors: [str] = crawl_data['background_color_dict']
         self.layouts = [e for e in Layout]
         self.content_types = ['bible', 'lorem', 'random'] # all of them use usernames
         self.other_types = ['images_only', 'only_text', 'with_images']
 
         self.word_list: [str] = prepare_words()
         self.bible_list: [str] = prepare_bible()
-        self.img_list: [str] = prepare_imgs()
+        self.img_list: [str] = self.prepare_imgs()
 
 
     def generate_html(self):
@@ -66,7 +98,7 @@ class Generator(object):
                         count: int = 0
                         for layout in self.layouts:
                             # Generate path
-                            file_path: str = self.save_directory + other_type + '/' + background_color + '/' + str(count)
+                            file_path: Path = Path(other_type.replace(' ', '_') + '/' + background_color.replace(' ', '_') + '/' + str(count))
                             count += 1
                             self.prepare(
                                 file_path=file_path,
@@ -78,6 +110,8 @@ class Generator(object):
                     for font_family in self.font_families:
                         for font_size in self.font_sizes:
                             for font_style in self.font_styles:
+                                # for font_style in self.font_styles:
+                                # for text_decoration in self.text_decorations:
                                 for font_color in self.font_colors:
                                     for background_color in self.background_colors:
                                         for layout in self.layouts:
@@ -85,13 +119,15 @@ class Generator(object):
                                                 bar.update(curr_it)
                                                 curr_it += 1
                                                 # Generate path
-                                                file_path: str = self.save_directory + other_type + '/' + font_family + '/' + font_size + '/' + font_style + '/' + font_color + '/' + '/' + background_color + '/' + layout.name + '/' + content_type
+                                                file_path: Path = Path(other_type.replace(' ', '_') + '/' + font_family.replace(' ', '_') + '/' + font_size.replace(' ', '_') + '/' + font_style.replace(' ', '_') + '/' + font_color.replace(' ', '_') + '/'.replace(' ', '_') + '/' + background_color.replace(' ', '_') + '/' + layout.name.replace(' ', '_') + '/' + content_type.replace(' ', '_'))
                                                 self.prepare(
                                                     file_path=file_path,
                                                     other_type=other_type,
                                                     font_family=font_family,
                                                     font_size=font_size,
                                                     font_style=font_style,
+                                                    # font_weight=font_weight,
+                                                    # text_decoration=text_decoration,
                                                     font_color=font_color,
                                                     background_color=background_color,
                                                     layout=layout,
@@ -100,16 +136,27 @@ class Generator(object):
 
 
     def prepare(self,
-        file_path: str='',
+        file_path: Path=Path(''),
         other_type: str='',
         font_family: str='',
         font_size: str='',
         font_style: str='',
+        font_weight: str='',
+        text_decoration: str='',
         font_color: str='',
         background_color: str='',
         layout: Layout=Layout.center,
         content_type: str='',
     ):
+
+        style: str = ''
+        if len(font_family) > 0: style += 'font-family: ' + font_family + '; '
+        if len(font_size) > 0: style += 'font-size: ' + font_size + '; '
+        if len(font_style) > 0: style += 'font-style: ' + font_style + '; '
+        if len(font_weight) > 0: style += 'font-weight: ' + font_weight + '; '
+        if len(text_decoration) > 0: style += 'text-decoration: ' + text_decoration + '; '
+        if len(font_color) > 0: style += 'color: ' + font_color + '; '
+        if len(background_color) > 0: style += 'background: ' + background_color + '; '
 
         if font_color[1:] == background_color[1:]:
             return
@@ -170,30 +217,29 @@ class Generator(object):
             sentences=sentences,
             paragraphs=paragraphs,
             usernames=usernames,
-            font_family=font_family,
-            font_size=font_size,
-            font_style=font_style,
-            font_color=font_color,
-            background_color=background_color,
             background_images=background_images,
+            style=style,
             layout=layout
             )
 
     def generate_file(self, 
-        path: str,
+        path: Path=Path(''),
         words: [str]=[''],
         sentences: [str]=[''],
         paragraphs: [str]=[''],
         usernames: [str]=[''],
-        font_family: str='',
-        font_size: str='',
-        font_style: str='',
-        font_color: str='',
-        background_color: str='',
         background_images: [str]=[],
+        style: str='',
         layout: Layout=Layout.center
         ) -> None:
+
+        misc_prefix = ''
+        for _ in range(str(path).count('/')):
+            misc_prefix += '../'
+        misc_prefix += self.misc_path.name
         doc = dominate.document(title='generated')
+
+        background_images = [str(Path(misc_prefix).joinpath(img)) for img in background_images]
 
         indexes: [int] = []
         possible_indexes: [int] = [0,1,2,3,4,5,6,7,8]
@@ -202,270 +248,245 @@ class Generator(object):
             indexes.append(possible_indexes.pop())
 
         with doc.head:
-            link(rel='stylesheet', href=os.path.abspath('style.css'))
+            link(rel='stylesheet', href=str(Path(misc_prefix).joinpath('style.css')))
 
         with doc.body:
-            with div(cls='grid' + ' ' + font_family + ' ' + font_size + ' ' + font_style + ' ' + font_color):
+            with div(cls='grid', style=style):
                 if layout == Layout.center:
                     if 0 not in indexes:
-                        div(cls='cell ' + background_color)
+                        div(cls='cell')
                     else:
-                        div(cls='cell ').add(img(cls='img', src=background_images.pop()))
+                        div(cls='cell').add(img(cls='img', src=background_images.pop()))
                     if 1 not in indexes:
-                        div(cls='cell ' + background_color).add(str_to_span(paragraphs[0]))
+                        div(cls='cell').add(str_to_span(paragraphs[0]))
                     else:
-                        div(cls='cell ').add(img(cls='img', src=background_images.pop()))
+                        div(cls='cell').add(img(cls='img', src=background_images.pop()))
                     if 2 not in indexes:
-                        div(cls='cell ' + background_color)
+                        div(cls='cell')
                     else:
-                        div(cls='cell ').add(img(cls='img', src=background_images.pop()))
+                        div(cls='cell').add(img(cls='img', src=background_images.pop()))
                     if 3 not in indexes:
-                        div(cls='cell ' + background_color)
+                        div(cls='cell')
                     else:
-                        div(cls='cell ').add(img(cls='img', src=background_images.pop()))
+                        div(cls='cell').add(img(cls='img', src=background_images.pop()))
                     if 4 not in indexes:
-                        div(cls='cell ' + background_color).add(str_to_span(paragraphs[1]))
+                        div(cls='cell').add(str_to_span(paragraphs[1]))
                     else:
-                        div(cls='cell ').add(img(cls='img', src=background_images.pop()))
+                        div(cls='cell').add(img(cls='img', src=background_images.pop()))
                     if 5 not in indexes:
-                        div(cls='cell ' + background_color)
+                        div(cls='cell')
                     else:
-                        div(cls='cell ').add(img(cls='img', src=background_images.pop()))
+                        div(cls='cell').add(img(cls='img', src=background_images.pop()))
                     if 6 not in indexes:
-                        div(cls='cell ' + background_color)
+                        div(cls='cell')
                     else:
-                        div(cls='cell ').add(img(cls='img', src=background_images.pop()))
+                        div(cls='cell').add(img(cls='img', src=background_images.pop()))
                     if 7 not in indexes:
-                        div(cls='cell ' + background_color).add(str_to_span(paragraphs[2]))
+                        div(cls='cell').add(str_to_span(paragraphs[2]))
                     else:
-                        div(cls='cell ').add(img(cls='img', src=background_images.pop()))
+                        div(cls='cell').add(img(cls='img', src=background_images.pop()))
                     if 8 not in indexes:
-                        div(cls='cell ' + background_color)
+                        div(cls='cell')
                     else:
-                        div(cls='cell ').add(img(cls='img', src=background_images.pop()))
+                        div(cls='cell').add(img(cls='img', src=background_images.pop()))
 
                 elif layout == Layout.left:
                     if 0 not in indexes:
-                        div(cls='cell ' + background_color).add(str_to_span(paragraphs[0]))
+                        div(cls='cell').add(str_to_span(paragraphs[0]))
                     else:
-                        div(cls='cell ').add(img(cls='img', src=background_images.pop()))
+                        div(cls='cell').add(img(cls='img', src=background_images.pop()))
                     if 1 not in indexes:
-                        div(cls='cell ' + background_color)
+                        div(cls='cell')
                     else:
-                        div(cls='cell ').add(img(cls='img', src=background_images.pop()))
+                        div(cls='cell').add(img(cls='img', src=background_images.pop()))
                     if 2 not in indexes:
-                        div(cls='cell ' + background_color)
+                        div(cls='cell')
                     else:
-                        div(cls='cell ').add(img(cls='img', src=background_images.pop()))
+                        div(cls='cell').add(img(cls='img', src=background_images.pop()))
                     if 3 not in indexes:
-                        div(cls='cell ' + background_color).add(str_to_span(paragraphs[1]))
+                        div(cls='cell').add(str_to_span(paragraphs[1]))
                     else:
-                        div(cls='cell ').add(img(cls='img', src=background_images.pop()))
+                        div(cls='cell').add(img(cls='img', src=background_images.pop()))
                     if 4 not in indexes:
-                        div(cls='cell ' + background_color)
+                        div(cls='cell')
                     else:
-                        div(cls='cell ').add(img(cls='img', src=background_images.pop()))
+                        div(cls='cell').add(img(cls='img', src=background_images.pop()))
                     if 5 not in indexes:
-                        div(cls='cell ' + background_color)
+                        div(cls='cell')
                     else:
-                        div(cls='cell ').add(img(cls='img', src=background_images.pop()))
+                        div(cls='cell').add(img(cls='img', src=background_images.pop()))
                     if 6 not in indexes:
-                        div(cls='cell ' + background_color).add(str_to_span(paragraphs[2]))
+                        div(cls='cell').add(str_to_span(paragraphs[2]))
                     else:
-                        div(cls='cell ').add(img(cls='img', src=background_images.pop()))
+                        div(cls='cell').add(img(cls='img', src=background_images.pop()))
                     if 7 not in indexes:
-                        div(cls='cell ' + background_color)
+                        div(cls='cell')
                     else:
-                        div(cls='cell ').add(img(cls='img', src=background_images.pop()))
+                        div(cls='cell').add(img(cls='img', src=background_images.pop()))
                     if 8 not in indexes:
-                        div(cls='cell ' + background_color)
+                        div(cls='cell')
                     else:
-                        div(cls='cell ').add(img(cls='img', src=background_images.pop()))
+                        div(cls='cell').add(img(cls='img', src=background_images.pop()))
 
                 elif layout == Layout.top:
                     if 0 not in indexes:
-                        div(cls='cell ' + background_color).add(str_to_span(paragraphs[0]))
+                        div(cls='cell').add(str_to_span(paragraphs[0]))
                     else:
-                        div(cls='cell ').add(img(cls='img', src=background_images.pop()))
+                        div(cls='cell').add(img(cls='img', src=background_images.pop()))
                     if 1 not in indexes:
-                        div(cls='cell ' + background_color).add(str_to_span(paragraphs[1]))
+                        div(cls='cell').add(str_to_span(paragraphs[1]))
                     else:
-                        div(cls='cell ').add(img(cls='img', src=background_images.pop()))
+                        div(cls='cell').add(img(cls='img', src=background_images.pop()))
                     if 2 not in indexes:
-                        div(cls='cell ' + background_color).add(str_to_span(paragraphs[2]))
+                        div(cls='cell').add(str_to_span(paragraphs[2]))
                     else:
-                        div(cls='cell ').add(img(cls='img', src=background_images.pop()))
+                        div(cls='cell').add(img(cls='img', src=background_images.pop()))
                     if 3 not in indexes:
-                        div(cls='cell ' + background_color)
+                        div(cls='cell')
                     else:
-                        div(cls='cell ').add(img(cls='img', src=background_images.pop()))
+                        div(cls='cell').add(img(cls='img', src=background_images.pop()))
                     if 4 not in indexes:
-                        div(cls='cell ' + background_color)
+                        div(cls='cell')
                     else:
-                        div(cls='cell ').add(img(cls='img', src=background_images.pop()))
+                        div(cls='cell').add(img(cls='img', src=background_images.pop()))
                     if 5 not in indexes:
-                        div(cls='cell ' + background_color)
+                        div(cls='cell')
                     else:
-                        div(cls='cell ').add(img(cls='img', src=background_images.pop()))
+                        div(cls='cell').add(img(cls='img', src=background_images.pop()))
                     if 6 not in indexes:
-                        div(cls='cell ' + background_color)
+                        div(cls='cell')
                     else:
-                        div(cls='cell ').add(img(cls='img', src=background_images.pop()))
+                        div(cls='cell').add(img(cls='img', src=background_images.pop()))
                     if 7 not in indexes:
-                        div(cls='cell ' + background_color)
+                        div(cls='cell')
                     else:
-                        div(cls='cell ').add(img(cls='img', src=background_images.pop()))
+                        div(cls='cell').add(img(cls='img', src=background_images.pop()))
                     if 8 not in indexes:
-                        div(cls='cell ' + background_color)
+                        div(cls='cell')
                     else:
-                        div(cls='cell ').add(img(cls='img', src=background_images.pop()))
+                        div(cls='cell').add(img(cls='img', src=background_images.pop()))
 
                 elif layout == Layout.wall_of_text:
                     if 0 not in indexes:
-                        div(cls='cell ' + background_color).add(str_to_span(paragraphs[0]))
+                        div(cls='cell').add(str_to_span(paragraphs[0]))
                     else:
-                        div(cls='cell ').add(img(cls='img', src=background_images.pop()))
+                        div(cls='cell').add(img(cls='img', src=background_images.pop()))
                     if 1 not in indexes:
-                        div(cls='cell ' + background_color).add(str_to_span(paragraphs[1]))
+                        div(cls='cell').add(str_to_span(paragraphs[1]))
                     else:
-                        div(cls='cell ').add(img(cls='img', src=background_images.pop()))
+                        div(cls='cell').add(img(cls='img', src=background_images.pop()))
                     if 2 not in indexes:
-                        div(cls='cell ' + background_color).add(str_to_span(paragraphs[2]))
+                        div(cls='cell').add(str_to_span(paragraphs[2]))
                     else:
-                        div(cls='cell ').add(img(cls='img', src=background_images.pop()))
+                        div(cls='cell').add(img(cls='img', src=background_images.pop()))
                     if 3 not in indexes:
-                        div(cls='cell ' + background_color).add(str_to_span(paragraphs[3]))
+                        div(cls='cell').add(str_to_span(paragraphs[3]))
                     else:
-                        div(cls='cell ').add(img(cls='img', src=background_images.pop()))
+                        div(cls='cell').add(img(cls='img', src=background_images.pop()))
                     if 4 not in indexes:
-                        div(cls='cell ' + background_color).add(str_to_span(paragraphs[4]))
+                        div(cls='cell').add(str_to_span(paragraphs[4]))
                     else:
-                        div(cls='cell ').add(img(cls='img', src=background_images.pop()))
+                        div(cls='cell').add(img(cls='img', src=background_images.pop()))
                     if 5 not in indexes:
-                        div(cls='cell ' + background_color).add(str_to_span(paragraphs[5]))
+                        div(cls='cell').add(str_to_span(paragraphs[5]))
                     else:
-                        div(cls='cell ').add(img(cls='img', src=background_images.pop()))
+                        div(cls='cell').add(img(cls='img', src=background_images.pop()))
                     if 6 not in indexes:
-                        div(cls='cell ' + background_color).add(str_to_span(paragraphs[6]))
+                        div(cls='cell').add(str_to_span(paragraphs[6]))
                     else:
-                        div(cls='cell ').add(img(cls='img', src=background_images.pop()))
+                        div(cls='cell').add(img(cls='img', src=background_images.pop()))
                     if 7 not in indexes:
-                        div(cls='cell ' + background_color).add(str_to_span(paragraphs[7]))
+                        div(cls='cell').add(str_to_span(paragraphs[7]))
                     else:
-                        div(cls='cell ').add(img(cls='img', src=background_images.pop()))
+                        div(cls='cell').add(img(cls='img', src=background_images.pop()))
                     if 8 not in indexes:
-                        div(cls='cell ' + background_color).add(str_to_span(paragraphs[8]))
+                        div(cls='cell').add(str_to_span(paragraphs[8]))
                     else:
-                        div(cls='cell ').add(img(cls='img', src=background_images.pop()))
+                        div(cls='cell').add(img(cls='img', src=background_images.pop()))
 
                 elif layout == Layout.l_word_c_text:
                     if 0 not in indexes:
-                        div(cls='cell ' + background_color).add(str_to_span(usernames[0]))
+                        div(cls='cell').add(str_to_span(usernames[0]))
                     else:
-                        div(cls='cell ').add(img(cls='img', src=background_images.pop()))
+                        div(cls='cell').add(img(cls='img', src=background_images.pop()))
                     if 1 not in indexes:
-                        div(cls='cell ' + background_color).add(str_to_span(paragraphs[0]))
+                        div(cls='cell').add(str_to_span(paragraphs[0]))
                     else:
-                        div(cls='cell ').add(img(cls='img', src=background_images.pop()))
+                        div(cls='cell').add(img(cls='img', src=background_images.pop()))
                     if 2 not in indexes:
-                        div(cls='cell ' + background_color)
+                        div(cls='cell')
                     else:
-                        div(cls='cell ').add(img(cls='img', src=background_images.pop()))
+                        div(cls='cell').add(img(cls='img', src=background_images.pop()))
                     if 3 not in indexes:
-                        div(cls='cell ' + background_color).add(str_to_span(usernames[1]))
+                        div(cls='cell').add(str_to_span(usernames[1]))
                     else:
-                        div(cls='cell ').add(img(cls='img', src=background_images.pop()))
+                        div(cls='cell').add(img(cls='img', src=background_images.pop()))
                     if 4 not in indexes:
-                        div(cls='cell ' + background_color).add(str_to_span(paragraphs[1]))
+                        div(cls='cell').add(str_to_span(paragraphs[1]))
                     else:
-                        div(cls='cell ').add(img(cls='img', src=background_images.pop()))
+                        div(cls='cell').add(img(cls='img', src=background_images.pop()))
                     if 5 not in indexes:
-                        div(cls='cell ' + background_color)
+                        div(cls='cell')
                     else:
-                        div(cls='cell ').add(img(cls='img', src=background_images.pop()))
+                        div(cls='cell').add(img(cls='img', src=background_images.pop()))
                     if 6 not in indexes:
-                        div(cls='cell ' + background_color).add(str_to_span(usernames[2]))
+                        div(cls='cell').add(str_to_span(usernames[2]))
                     else:
-                        div(cls='cell ').add(img(cls='img', src=background_images.pop()))
+                        div(cls='cell').add(img(cls='img', src=background_images.pop()))
                     if 7 not in indexes:
-                        div(cls='cell ' + background_color).add(str_to_span(paragraphs[2]))
+                        div(cls='cell').add(str_to_span(paragraphs[2]))
                     else:
-                        div(cls='cell ').add(img(cls='img', src=background_images.pop()))
+                        div(cls='cell').add(img(cls='img', src=background_images.pop()))
                     if 8 not in indexes:
-                        div(cls='cell ' + background_color)
+                        div(cls='cell')
                     else:
-                        div(cls='cell ').add(img(cls='img', src=background_images.pop()))
+                        div(cls='cell').add(img(cls='img', src=background_images.pop()))
 
                 elif layout == Layout.words:
                     if 0 not in indexes:
-                        div(cls='cell ' + background_color).add(str_to_span(words[0]))
+                        div(cls='cell').add(str_to_span(words[0]))
                     else:
-                        div(cls='cell ').add(img(cls='img', src=background_images.pop()))
+                        div(cls='cell').add(img(cls='img', src=background_images.pop()))
                     if 1 not in indexes:
-                        div(cls='cell ' + background_color).add(str_to_span(words[1]))
+                        div(cls='cell').add(str_to_span(words[1]))
                     else:
-                        div(cls='cell ').add(img(cls='img', src=background_images.pop()))
+                        div(cls='cell').add(img(cls='img', src=background_images.pop()))
                     if 2 not in indexes:
-                        div(cls='cell ' + background_color).add(str_to_span(words[2]))
+                        div(cls='cell').add(str_to_span(words[2]))
                     else:
-                        div(cls='cell ').add(img(cls='img', src=background_images.pop()))
+                        div(cls='cell').add(img(cls='img', src=background_images.pop()))
                     if 3 not in indexes:
-                        div(cls='cell ' + background_color).add(str_to_span(words[3]))
+                        div(cls='cell').add(str_to_span(words[3]))
                     else:
-                        div(cls='cell ').add(img(cls='img', src=background_images.pop()))
+                        div(cls='cell').add(img(cls='img', src=background_images.pop()))
                     if 4 not in indexes:
-                        div(cls='cell ' + background_color).add(str_to_span(words[4]))
+                        div(cls='cell').add(str_to_span(words[4]))
                     else:
-                        div(cls='cell ').add(img(cls='img', src=background_images.pop()))
+                        div(cls='cell').add(img(cls='img', src=background_images.pop()))
                     if 5 not in indexes:
-                        div(cls='cell ' + background_color).add(str_to_span(words[5]))
+                        div(cls='cell').add(str_to_span(words[5]))
                     else:
-                        div(cls='cell ').add(img(cls='img', src=background_images.pop()))
+                        div(cls='cell').add(img(cls='img', src=background_images.pop()))
                     if 6 not in indexes:
-                        div(cls='cell ' + background_color).add(str_to_span(words[6]))
+                        div(cls='cell').add(str_to_span(words[6]))
                     else:
-                        div(cls='cell ').add(img(cls='img', src=background_images.pop()))
+                        div(cls='cell').add(img(cls='img', src=background_images.pop()))
                     if 7 not in indexes:
-                        div(cls='cell ' + background_color).add(str_to_span(words[7]))
+                        div(cls='cell').add(str_to_span(words[7]))
                     else:
-                        div(cls='cell ').add(img(cls='img', src=background_images.pop()))
+                        div(cls='cell').add(img(cls='img', src=background_images.pop()))
                     if 8 not in indexes:
-                        div(cls='cell ' + background_color).add(str_to_span(words[8]))
+                        div(cls='cell').add(str_to_span(words[8]))
                     else:
-                        div(cls='cell ').add(img(cls='img', src=background_images.pop()))
+                        div(cls='cell').add(img(cls='img', src=background_images.pop()))
+
+            script(type='text/javascript', src=str(Path(misc_prefix).joinpath('script.js')))
 
 
-            script(type='text/javascript', src=os.path.abspath('script.js'))
-
-            # js_hideElements: str = '(function() { \
-            #         let spans = document.getElementsByTagName("span"); \
-            #         for (i = 0; i < spans.length; i++) { \
-            #             if (!spans[i].innerText.match(/^[a-zA-Z0-9]+/)) { \
-            #                 continue; \
-            #             } \
-            #             let spanRect = spans[i].getBoundingClientRect() \
-            #             let divRect = spans[i].parentNode.parentNode.getBoundingClientRect() \
-            #             if (!(spanRect.top <= divRect.top + divRect.height && \
-            #                 spanRect.left <= divRect.left + divRect.width && \
-            #                 spanRect.top + spanRect.height <= divRect.top + divRect.height && \
-            #                 spanRect.left + spanRect.width <= divRect.left + divRect.width)) { \
-            #                     spans[i].setAttribute("style", "display: none;"); \
-            #             } \
-            #         } \
-            #     })();'
-            # script(js_hideElements)
-
-        out_path: str = ''
-
-        try:
-            out_path = re.search(r'(.*[\/])', path).group()
-        except AttributeError:
-            out_path = path
-        Path(out_path).mkdir(parents=True, exist_ok=True)
-        with codecs.open(path + '.html', 'w', 'utf-8-sig') as f:
+        out_path: Path = self.save_directory.joinpath(path)
+        Path(out_path).parent.mkdir(parents=True, exist_ok=True)
+        with codecs.open(str(out_path)+'.html', 'w', 'utf-8-sig') as f:
             f.write(htmlmin.minify(doc.render(), remove_empty_space=True))
-        global prints
-        if prints: print('CREATED:  ' + path + '.html')
 
     def get_images(self) -> [str]:
         imgs: [str] = ['']
@@ -546,6 +567,15 @@ class Generator(object):
 
             return paragraph
 
+    def prepare_imgs(self) -> [str]:
+        img_list: [str] = ['']
+
+        for path in self.img_path.rglob('*.jpg'):
+            i = str(path).find('imgs')
+            img_list.append(str(path)[i:])
+
+        return img_list
+
 def str_to_span(content: str):
     paragraph = p()
     for word in content.split():
@@ -581,14 +611,6 @@ def prepare_bible() -> [str]:
 
     del bible_list[0]
     return bible_list
-
-def prepare_imgs() -> [str]:
-    img_list: [str] = ['']
-
-    for path in Path('resources/imgs/').rglob('*.jpg'):
-        img_list.append(os.path.abspath(path))
-
-    return img_list
 
 if __name__ == '__main__':
     main()

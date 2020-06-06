@@ -7,8 +7,6 @@ import cv2
 import matplotlib.pyplot as plt
 import progressbar
 
-prints: bool = False
-
 def main() -> None:
     parser = argparse.ArgumentParser(description='Add bounding boxes to image.')
     # Ideal Directory
@@ -20,11 +18,15 @@ def main() -> None:
 
     args = parser.parse_args()
 
+    add_boxes(args.input_img[0], args.input_txt[0], args.output[0])
+
+
+def add_boxes(in_imgs: str, in_txts: str, out: str):
     # INPUT FEEDBACK
     # Paths
-    input_img_path: Path = Path(args.input_img[0]).absolute()
-    input_txt_path: Path = Path(args.input_txt[0]).absolute()
-    output_path: Path = Path(args.output[0]).absolute()
+    input_img_path: Path = Path(in_imgs).absolute()
+    input_txt_path: Path = Path(in_txts).absolute()
+    output_path: Path = Path(out).absolute()
 
     root: Path = Path().absolute()
     load_root = root.joinpath(input_img_path)
@@ -39,7 +41,6 @@ def main() -> None:
 
     for i in progressbar.progressbar(range(len(files))):
         p = files[i]
-        if prints: print('load: ' + str(p))
         start = time.time()
 
         all_coordinates: [[int]] = []
@@ -67,7 +68,6 @@ def main() -> None:
         Path(save_path).parent.mkdir(parents=True, exist_ok=True)
         plt.imsave(save_path, img)
         end = time.time()
-        if prints: print('save: ' + str(save_path), end - start)
 
     end_whole = time.time()
     print('Whole:', end_whole - start_whole)
