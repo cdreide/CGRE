@@ -36,6 +36,10 @@ def crawl(in_path: str, out_path: str) -> None:
 
         retrieve_style = """
             async () => {
+                const sleep = (ms) => {
+                    return new Promise(resolve => setTimeout(resolve, ms));
+                }
+
                 const renderedfont = (ele) => {
                     var getDefaultFonts = function () {
                         var iframe = document.createElement('iframe');
@@ -95,7 +99,7 @@ def crawl(in_path: str, out_path: str) -> None:
                     let font_size_list = [];
                     let font_style_list = [];
                     let font_weight_list = [];
-                    let text_decoration = [];
+                    let text_decoration_list = [];
                     let font_color_list = [];
                     let background_color_list = [];
                     let total = 0;
@@ -108,7 +112,7 @@ def crawl(in_path: str, out_path: str) -> None:
                             font_size_list.push(window.getComputedStyle(all[i]).getPropertyValue("font-size"));
                             font_style_list.push(window.getComputedStyle(all[i]).getPropertyValue("font-style"));
                             font_weight_list.push(window.getComputedStyle(all[i]).getPropertyValue("font-weight"));
-                            text_decoration.push(window.getComputedStyle(all[i]).getPropertyValue("text-decoration"));
+                            text_decoration_list.push(window.getComputedStyle(all[i]).getPropertyValue("text-decoration"));
                             font_color_list.push(window.getComputedStyle(all[i]).getPropertyValue("color"));
                             background_color_list.push(window.getComputedStyle(all[i]).getPropertyValue("background"));
                             total++;
@@ -127,16 +131,9 @@ def crawl(in_path: str, out_path: str) -> None:
                     }
                 }
 
-                const timer = () => {
-                    let promise = new Promise((resolve, reject) => {
-                        window.setTimeout(() => {
-                            resolve(crawl());
-                        }, 1000);
-                    });
-                    return promise;
-                }
+                await sleep(1000);
 
-                return await timer();
+                return crawl();
             }
         """
 

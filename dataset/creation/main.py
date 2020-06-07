@@ -25,7 +25,7 @@ def main() -> None:
                     dest = 'add_boxes',
                     action = 'store_true',
                     default = False)
-    (options, args) = parser.parse_args()
+    (options, _) = parser.parse_args()
 
     try:
         crawl_urls: Path = Path(options.in_path)
@@ -45,7 +45,7 @@ def main() -> None:
     render_results: str = str(out_path.joinpath('dataset').absolute())
 
     crawl(crawl_urls, crawl_results)
-    generate_html(crawl_results, int(options.top_values) html_results)
+    generate_html(crawl_results, int(options.top_values), html_results)
     render_html(html_results, render_results)
     if options.add_boxes:
         boxes_results: Path = out_path.joinpath('dataset_boxes')
