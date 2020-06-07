@@ -19,18 +19,18 @@ import shutil
 def main() -> None:
     parser = OptionParser()
     parser.add_option( '-c',
-                '--crawled',
-                dest = 'crawl_data_path',
-                metavar = 'FILE' )
+                    '--crawled',
+                    dest = 'crawl_data_path',
+                    metavar = 'FILE' )
     parser.add_option( '-t',
-                '--top',
-                dest = 'top_values',
-                default = 1,
-                metavar = 'INT' )
+                    '--top',
+                    dest = 'top_values',
+                    default = 1,
+                    metavar = 'INT' )
     parser.add_option( '-o',
-                '--out',
-                dest = 'out_path',
-                metavar = 'FOLDER' )
+                    '--out',
+                    dest = 'out_path',
+                    metavar = 'FOLDER' )
     (options, args) = parser.parse_args()
 
     generate_html(Path(options.crawl_data_path), int(options.top_values), Path(options.out_path))
