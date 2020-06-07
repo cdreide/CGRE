@@ -16,6 +16,10 @@ def main() -> None:
     parser.add_option( '-o',
                     '--out',
                     dest = 'out_path')
+    parser.add_option( '-t',
+                    '--top',
+                    dest = 'top_values',
+                    default = 1)
     parser.add_option( '-b',
                     '--boxes',
                     dest = 'add_boxes',
@@ -41,7 +45,7 @@ def main() -> None:
     render_results: str = str(out_path.joinpath('dataset').absolute())
 
     crawl(crawl_urls, crawl_results)
-    generate_html(crawl_results, html_results)
+    generate_html(crawl_results, int(options.top_values) html_results)
     render_html(html_results, render_results)
     if options.add_boxes:
         boxes_results: Path = out_path.joinpath('dataset_boxes')
