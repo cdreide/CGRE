@@ -6,19 +6,16 @@ mkdir -p results
 
 ### Creation ###
 echo '### Creation ###'
-cd ./datasetCreation
+cd ./dataset/creation
 echo '# Generating'
-pipenv run python generate_html.py
-echo '# Rendering'
-pipenv run python render_html.py
-mv dataset html ../results
+pipenv run python main.py -i ../styleCrawling/resources/urls_us -o ../../results -b
 
 ### Recognition ###
 echo '### Recognition ###'
 
 ## Localisation
 echo '## Localisation'
-cd ../localisation/tesseract_localiser
+cd ../../recognition/localisation/tesseract_localiser
 ./setup.sh
 ./build/tesseract_localiser ../../results/dataset ../../results/dataset_tesseract_localised
 
@@ -34,7 +31,7 @@ echo '## Determination on localised (complete)'
 
 ## Evaluation
 echo '## Evaluation'
-cd ../../evaluation
+cd ../../../evaluation
 echo '# Determination'
 pipenv run python evaluation.py ../results/dataset ../results/dataset_tesseract_determiner/ -cp 0.5 -lt 2
 echo '# Localised (complete)'
