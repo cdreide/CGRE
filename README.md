@@ -1,6 +1,11 @@
 # OCROnWebpages
 
 Pre:
+    Docker:
+        
+        alias ocr='docker run ocr '
+        alias ocrp='docker run ocr pipenv run python'
+        https://www.digitalocean.com/community/questions/how-to-fix-docker-got-permission-denied-while-trying-to-connect-to-the-docker-daemon-socket
     pyenv:
         ``https://github.com/pyenv/pyenv/wiki``
         (sudo apt-get update; sudo apt-get install --no-install-recommends make build-essential libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm libncurses5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev)

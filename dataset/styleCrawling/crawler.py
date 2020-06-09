@@ -1,5 +1,6 @@
 from optparse import OptionParser
 from requests_html import HTMLSession
+from pathlib import Path
 import json
 import re
 import pprint
@@ -20,6 +21,8 @@ def main() -> None:
 
 
 def crawl(in_path: str, out_path: str) -> None:
+
+    Path(out_path).mkdir(parents=True, exist_ok=True)
 
     urls: [str] = []
     pre: str = 'http://'
@@ -99,7 +102,7 @@ def crawl(in_path: str, out_path: str) -> None:
                     let font_size_list = [];
                     let font_style_list = [];
                     let font_weight_list = [];
-                    let text_decoration_list = [];
+                    let text_decoration_line_list = [];
                     let font_color_list = [];
                     let background_color_list = [];
                     let total = 0;
@@ -112,7 +115,7 @@ def crawl(in_path: str, out_path: str) -> None:
                             font_size_list.push(window.getComputedStyle(all[i]).getPropertyValue("font-size"));
                             font_style_list.push(window.getComputedStyle(all[i]).getPropertyValue("font-style"));
                             font_weight_list.push(window.getComputedStyle(all[i]).getPropertyValue("font-weight"));
-                            text_decoration_list.push(window.getComputedStyle(all[i]).getPropertyValue("text-decoration"));
+                            text_decoration_line_list.push(window.getComputedStyle(all[i]).getPropertyValue("text-decoration-line"));
                             font_color_list.push(window.getComputedStyle(all[i]).getPropertyValue("color"));
                             background_color_list.push(window.getComputedStyle(all[i]).getPropertyValue("background"));
                             total++;
@@ -123,7 +126,7 @@ def crawl(in_path: str, out_path: str) -> None:
                         font_size: getOccurences(font_size_list),
                         font_style: getOccurences(font_style_list),
                         font_weight: getOccurences(font_weight_list),
-                        text_decoration: getOccurences(text_decoration_list),
+                        text_decoration_line: getOccurences(text_decoration_line_list),
                         font_color: getOccurences(font_color_list),
                         background_color: getOccurences(background_color_list),
                         status: 'success',
@@ -164,9 +167,9 @@ def crawl(in_path: str, out_path: str) -> None:
         # pprint.pprint(res, width=1)
 
 
-    # with open('log.json', 'w') as f:
-    #     f.write(json.dumps(results, indent=4))
-    #     f.write('\n')
+    with open(out_path + '/log.json', 'w') as f:
+        f.write(json.dumps(results, indent=4))
+        f.write('\n')
 
 
     # Processing
@@ -176,7 +179,7 @@ def crawl(in_path: str, out_path: str) -> None:
     font_size_dict: [str] = {}
     font_style_dict: [str] = {}
     font_weight_dict: [str] = {}
-    text_decoration_dict: [str] = {}
+    text_decoration_line_dict: [str] = {}
     font_color_dict: [str] = {}
     background_color_dict: [str] = {}
 
@@ -188,7 +191,7 @@ def crawl(in_path: str, out_path: str) -> None:
         tmp_font_size_dict: [str] = {}
         tmp_font_style_dict: [str] = {}
         font_weight_dict: [str] = {}
-        text_decoration_dict: [str] = {}
+        text_decoration_line_dict: [str] = {}
         tmp_font_color_dict: [str] = {}
         tmp_background_color_dict: [str] = {}
         
@@ -209,33 +212,24 @@ def crawl(in_path: str, out_path: str) -> None:
         for font_size in page['font_size']:
             font_size_clean: str = font_size.lower()
 
-            add_to_dict(tmp_font_size_dict, font_size, page['font_size'][font_size])
+            add_to_dict(tmp_font_size_dict, font_size_clean, page['font_size'][font_size])
 
         for font_style in page['font_style']:
 
             font_style_clean: str = re.sub(rgba_reg, '', re.sub(rgb_reg, '', font_style)).lower()
-            # font_style_clean = font_style.lower()
-            if 'none' in font_style_clean or '400' in font_style_clean:
-                font_style_clean = 'normal'
-
-
+           
             add_to_dict(tmp_font_style_dict, font_style_clean, page['font_style'][font_style])
 
         for font_weight in page['font_weight']:
 
-            font_style_clean: str = re.sub(rgba_reg, '', re.sub(rgb_reg, '', font_style)).lower()
-
-            if 'none' in font_weight_clean or '400' in font_weight_clean:
-                font_weight_clean: str = 'normal'
+            font_weight_clean: str = re.sub(rgba_reg, '', re.sub(rgb_reg, '', font_style)).lower()
 
             add_to_dict(tmp_font_weight_dict, font_weight_clean, page['font_weight'][font_weight])
 
-        for text_decoration in page['text_decoration']:
+        for text_decoration_line in page['text_decoration_line']:
+            text_decoration_line_clean: str = re.sub(rgba_reg, '', re.sub(rgb_reg, '', font_style)).lower()
 
-            if 'none' in text_decoration_clean or '400' in text_decoration_clean:
-                text_decoration_clean = 'normal'
-
-            add_to_dict(tmp_text_decoration_dict, text_decoration_clean, page['text_decoration'][text_decoration])
+            add_to_dict(tmp_text_decoration_line_dict, text_decoration_line_clean, page['text_decoration_line'][text_decoration_line])
 
         for font_color in page['font_color']:
 
@@ -260,7 +254,7 @@ def crawl(in_path: str, out_path: str) -> None:
         tmp_font_size_dict_total: float = float(sum(list(tmp_font_size_dict.values())))
         tmp_font_style_dict_total: float = float(sum(list(tmp_font_style_dict.values())))
         tmp_font_weight_dict_total: float = float(sum(list(tmp_font_weight_dict.values())))
-        tmp_text_decoration_dict_total: float = float(sum(list(tmp_text_decoration_dict.values())))
+        tmp_text_decoration_line_dict_total: float = float(sum(list(tmp_text_decoration_line_dict.values())))
         tmp_font_color_dict_total: float = float(sum(list(tmp_font_color_dict.values())))
         tmp_background_color_dict_total: float = float(sum(list(tmp_background_color_dict.values())))
 
@@ -268,7 +262,7 @@ def crawl(in_path: str, out_path: str) -> None:
         tmp_font_size_dict = {k: v / tmp_font_size_dict_total for k, v in tmp_font_size_dict.items()}
         tmp_font_style_dict = {k: v / tmp_font_style_dict_total for k, v in tmp_font_style_dict.items()}
         tmp_font_weight_dict = {k: v / tmp_font_weight_dict_total for k, v in tmp_font_weight_dict.items()}
-        tmp_text_decoration_dict = {k: v / tmp_text_decoration_dict_total for k, v in tmp_text_decoration_dict.items()}
+        tmp_text_decoration_line_dict = {k: v / tmp_text_decoration_line_dict_total for k, v in tmp_text_decoration_line_dict.items()}
         tmp_font_color_dict = {k: v / tmp_font_color_dict_total for k, v in tmp_font_color_dict.items()}
         tmp_background_color_dict = {k: v / tmp_background_color_dict_total for k, v in tmp_background_color_dict.items()}
 
@@ -276,7 +270,7 @@ def crawl(in_path: str, out_path: str) -> None:
         font_size_dict = merge_dicts(font_size_dict, tmp_font_size_dict)
         font_style_dict = merge_dicts(font_style_dict, tmp_font_style_dict)
         font_weight_dict = merge_dicts(font_weight_dict, tmp_font_weight_dict)
-        text_decoration_dict = merge_dicts(text_decoration_dict, tmp_text_decoration_dict)
+        text_decoration_line_dict = merge_dicts(text_decoration_line_dict, tmp_text_decoration_line_dict)
         font_color_dict = merge_dicts(font_color_dict, tmp_font_color_dict)
         background_color_dict = merge_dicts(background_color_dict, tmp_background_color_dict)
 
@@ -286,7 +280,7 @@ def crawl(in_path: str, out_path: str) -> None:
     font_size_dict = {k: v / total for k, v in sorted(font_size_dict.items(), key=lambda item: item[1], reverse=True)}
     font_style_dict = {k: v / total for k, v in sorted(font_style_dict.items(), key=lambda item: item[1], reverse=True)}
     font_weight_dict = {k: v / total for k, v in sorted(font_weight_dict.items(), key=lambda item: item[1], reverse=True)}
-    text_decoration_dict = {k: v / total for k, v in sorted(text_decoration_dict.items(), key=lambda item: item[1], reverse=True)}
+    text_decoration_line_dict = {k: v / total for k, v in sorted(text_decoration_line_dict.items(), key=lambda item: item[1], reverse=True)}
     font_color_dict = {k: v / total for k, v in sorted(font_color_dict.items(), key=lambda item: item[1], reverse=True)}
     background_color_dict = {k: v / total for k, v in sorted(background_color_dict.items(), key=lambda item: item[1], reverse=True)}
 
@@ -297,7 +291,7 @@ def crawl(in_path: str, out_path: str) -> None:
         'font_size_dict': font_size_dict,
         'font_weight_dict': font_weight_dict,
         'font_size_dict': font_size_dict,
-        'text_decoration_dict': text_decoration_dict,
+        'text_decoration_line_dict': text_decoration_line_dict,
         'font_color_dict': font_color_dict,
         'background_color_dict': background_color_dict
         }
@@ -313,13 +307,13 @@ def crawl(in_path: str, out_path: str) -> None:
     print('Done!')
 
 
-def add_to_dict(dic, key, value):
+def add_to_dict(dic, key, value) -> None:
     if key not in dic:
         dic[key] = value
     else:
         dic[key] += value
 
-def merge_dicts(total_dict, new_dict):
+def merge_dicts(total_dict, new_dict) -> dict:
     for key in new_dict.keys():
         if key not in total_dict.keys():
             total_dict[key] = new_dict[key]

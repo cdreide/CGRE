@@ -1,6 +1,7 @@
-import sys
-sys.path.append("../..")
 from pathlib import Path
+import sys
+path: Path = Path(__file__).parent.absolute()
+sys.path.append(str(path.joinpath("../..")))
 from optparse import OptionParser
 
 from dataset.styleCrawling.crawler import crawl
@@ -44,8 +45,11 @@ def main() -> None:
     html_results: str = str(out_path.joinpath('html').absolute())
     render_results: str = str(out_path.joinpath('dataset').absolute())
 
+    print('Crawling...')
     crawl(crawl_urls, crawl_results)
+    print('Generate HTML...')
     generate_html(crawl_results, int(options.top_values), html_results)
+    print('Render HTML...')
     render_html(html_results, render_results)
     if options.add_boxes:
         boxes_results: Path = out_path.joinpath('dataset_boxes')
