@@ -42,9 +42,8 @@ def generate_html(crawl_data_path: Path, top_values: int, out_path: Path) -> Non
         tmp_data = json.load(f)
 
     for category in tmp_data.keys():
-        if not isinstance(tmp_data[category], dict):
-            continue
-        crawl_data[category] = list(tmp_data[category].keys())[0:top_values]
+        if isinstance(tmp_data[category], dict):
+            crawl_data[category] = list(tmp_data[category].keys())[0:top_values]
 
     generator: Generator = Generator(crawl_data, out_path)
 

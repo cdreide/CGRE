@@ -22,7 +22,10 @@ def main() -> None:
 
 def crawl(in_path: str, out_path: str) -> None:
 
-    Path(out_path).mkdir(parents=True, exist_ok=True)
+    if '.' not in out_path:
+        Path(out_path).mkdir(parents=True, exist_ok=True)
+    else:
+        Path(out_path).parent.mkdir(parents=True, exist_ok=True)
 
     urls: [str] = []
     pre: str = 'http://'
@@ -154,7 +157,7 @@ def crawl(in_path: str, out_path: str) -> None:
             # keep_page: bool = False, 
             # cookies: list = [{}], 
             # send_cookies_session: bool = False):
-            res = r.html.render(script = retrieve_style, retries = 10, timeout = 15.0)
+            res = r.html.render(script = retrieve_style, retries = 5, timeout = 10.0)
         except Exception as e:
             print(e)
             res = {'status': 'fail'}
@@ -167,10 +170,9 @@ def crawl(in_path: str, out_path: str) -> None:
         # pprint.pprint(res, width=1)
 
 
-    with open(out_path + '/log.json', 'w') as f:
+    with open(str(Path(out_path).parent.joinpath('crawl_raw.json')), 'w') as f:
         f.write(json.dumps(results, indent=4))
         f.write('\n')
-
 
     # Processing
     failed: [str] = []
@@ -190,8 +192,8 @@ def crawl(in_path: str, out_path: str) -> None:
         tmp_font_family_dict: [str] = {}
         tmp_font_size_dict: [str] = {}
         tmp_font_style_dict: [str] = {}
-        font_weight_dict: [str] = {}
-        text_decoration_line_dict: [str] = {}
+        tmp_font_weight_dict: [str] = {}
+        tmp_text_decoration_line_dict: [str] = {}
         tmp_font_color_dict: [str] = {}
         tmp_background_color_dict: [str] = {}
         
@@ -216,18 +218,18 @@ def crawl(in_path: str, out_path: str) -> None:
 
         for font_style in page['font_style']:
 
-            font_style_clean: str = re.sub(rgba_reg, '', re.sub(rgb_reg, '', font_style)).lower()
-           
+            font_style_clean: str = font_style.lower()
+            
             add_to_dict(tmp_font_style_dict, font_style_clean, page['font_style'][font_style])
 
         for font_weight in page['font_weight']:
 
-            font_weight_clean: str = re.sub(rgba_reg, '', re.sub(rgb_reg, '', font_style)).lower()
+            font_weight_clean: str = font_weight.lower()
 
             add_to_dict(tmp_font_weight_dict, font_weight_clean, page['font_weight'][font_weight])
 
         for text_decoration_line in page['text_decoration_line']:
-            text_decoration_line_clean: str = re.sub(rgba_reg, '', re.sub(rgb_reg, '', font_style)).lower()
+            text_decoration_line_clean: str = text_decoration_line.lower()
 
             add_to_dict(tmp_text_decoration_line_dict, text_decoration_line_clean, page['text_decoration_line'][text_decoration_line])
 
@@ -289,8 +291,8 @@ def crawl(in_path: str, out_path: str) -> None:
         'failed': failed,
         'font_family_dict': font_family_dict,
         'font_size_dict': font_size_dict,
+        'font_style_dict': font_style_dict,
         'font_weight_dict': font_weight_dict,
-        'font_size_dict': font_size_dict,
         'text_decoration_line_dict': text_decoration_line_dict,
         'font_color_dict': font_color_dict,
         'background_color_dict': background_color_dict
@@ -298,13 +300,14 @@ def crawl(in_path: str, out_path: str) -> None:
 
 
     # print(font_color_dict)
-    if '.' not in out_path:
-        out_path += '.json'
-    with open(out_path, 'w') as f:
+
+    with open('/home/christopher/Git/OCROnWebpages/results/crawl.json', 'w') as f:
         f.write(json.dumps(log, indent=4))
         f.write('\n')
 
     print('Done!')
+
+
 
 
 def add_to_dict(dic, key, value) -> None:
