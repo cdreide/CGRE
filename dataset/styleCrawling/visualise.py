@@ -1,43 +1,64 @@
+from optparse import OptionParser
+from pathlib import Path
 import numpy as np
 import matplotlib.pyplot as plt
 import json
-from pathlib import Path
 
 out_path: str = "visualisations/"
+def main():
+    parser = OptionParser()
+    parser.add_option( '-i',
+                    '--input',
+                    dest = 'input',
+                    metavar = 'FILE' )
+    parser.add_option( '-o',
+                    '--output',
+                    dest = 'output',
+                    metavar = 'FOLDER' )
+    (options, _) = parser.parse_args()
 
-with open('log_clean_example.json', 'r') as f:
-    log = json.load(f)
+    in_path = str(Path(options.input))
+    out_path = str(Path(options.output))
 
-for dic in log.keys():
-    if dic == 'succeeded' or dic == 'failed':
-        continue
+    visualise(in_path, out_path)
 
-    # BAR
-    plt.barh(list(log[dic].keys())[:10], list(log[dic].values())[:10], color='b')
+def visualise(in_path, out_path):
+    with open(in_path, 'r') as f:
+        log = json.load(f)
 
-    plt.title(dic)
-    plt.xlabel('Occurences')
-    plt.ylabel('Type')
+    for dic in log.keys():
+        if dic == 'succeeded' or dic == 'failed':
+            continue
 
-    plt.tight_layout()
+        # BAR
+        plt.barh(list(log[dic].keys())[:10], list(log[dic].values())[:10], color='b')
 
-    save_path: str = out_path + 'bar/' + dic + '.pdf'
-    Path(save_path).parent.mkdir(parents=True, exist_ok=True)
-    plt.savefig(save_path, bbox_inches='tight')
+        plt.title(dic)
+        plt.xlabel('Occurences')
+        plt.ylabel('Type')
 
-    plt.clf()
+        plt.tight_layout()
 
-    # PIE
-    # plt.pie(labels=list(log[dic].keys())[:10], x=list(log[dic].values())[:10])
-    plt.pie(labels=list(log[dic].keys()), x=list(log[dic].values()))
+        save_path: str = str(Path(out_path).joinpath('bar').joinpath(dic)) + '.pdf'
+        Path(save_path).parent.mkdir(parents=True, exist_ok=True)
+        plt.savefig(save_path, bbox_inches='tight')
 
-    plt.title(dic)
-    
+        plt.clf()
 
-    plt.tight_layout()
+        # PIE
+        # plt.pie(labels=list(log[dic].keys())[:10], x=list(log[dic].values())[:10])
+        plt.pie(labels=list(log[dic].keys()), x=list(log[dic].values()))
 
-    save_path: str = out_path + 'pie/' + dic + '.pdf'
-    Path(save_path).parent.mkdir(parents=True, exist_ok=True)
-    plt.savefig(save_path, bbox_inches='tight')
-    plt.clf()
-    # plt.show()
+        plt.title(dic)
+
+        plt.tight_layout()
+
+        save_path: str = str(Path(out_path).joinpath('pie').joinpath(dic)) + '.pdf'
+        Path(save_path).parent.mkdir(parents=True, exist_ok=True)
+        plt.savefig(save_path, bbox_inches='tight')
+        plt.clf()
+        # plt.show()
+
+
+if __name__ == '__main__':
+    main()

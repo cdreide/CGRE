@@ -14,6 +14,9 @@ import codecs
 import progressbar
 
 
+input_dir: str = ''
+output_dir: str = ''
+
 # Main function
 def main() -> None:
     parser = OptionParser()
@@ -29,7 +32,7 @@ def main() -> None:
 
     render_html(options.in_path, options.out_path)
 
-def render_html() -> None:
+def render_html(in_path: str, out_path: str) -> None:
     cef_handle = CefHandle()
     cef_handle.run_cef(in_path, out_path)
 
@@ -52,6 +55,11 @@ class Mediator(object):
         self.urls.pop(0)
         self.bar = progressbar.ProgressBar(max_value=len(self.urls))
         self.count: int = 0
+
+        global input_dir
+        input_dir = self.in_dir
+        global output_dir
+        output_dir = self.out_dir
 
     def get_current_url(self) -> str:
         return self.urls[self.count]
@@ -174,21 +182,25 @@ class LoadHandler(object):
             self.mediator.save_image()
 
 def save_data_txt(value):
+    global input_dir
+    global output_dir
+
     path: str = value.split('\n')[0][8:]
-    os.path.abspath('./')
-    term = 'datasetCreation\/html\/'
+
+    term = '\/' + Path(input_dir).name + '\/'
     reg = '(' + term + ')(.*)'
     found = re.search(re.compile(reg),path).groups()[1]
 
-    found_list = found.split('/')[0:-1]
-    found_path = '/'.join(found_list)
 
-    found_path_name_list = found.split('.')[0:-1]
-    found_path_name = '/'.join(found_path_name_list)
+    # found_list = found.split('/')[0:-1]
+    # found_path = '/'.join(found_list)
 
-    out_dir = os.path.abspath('dataset/' + found_path + '/')
-    Path(out_dir).mkdir(parents=True, exist_ok=True)
-    with codecs.open('dataset/' + found_path_name + '.txt', 'w', "utf-8") as f:
+    # found_path_name_list = found.split('.')[0:-1]
+    # found_path_name = '/'.join(found_path_name_list)
+
+    out_path = str(Path(output_dir).joinpath(found)).replace(Path(found).suffix, '.txt')
+    Path(out_path).parent.mkdir(parents=True, exist_ok=True)
+    with codecs.open(out_path, 'w', "utf-8") as f:
         f.write(value)
 
 if __name__ == '__main__':

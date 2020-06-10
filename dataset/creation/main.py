@@ -8,6 +8,7 @@ from dataset.styleCrawling.crawler import crawl
 from dataset.creation.generate_html import generate_html
 from dataset.creation.render_html import render_html
 from evaluation.add_boxes import add_boxes
+from dataset.styleCrawling.visualise import visualise
 
 def main() -> None:
     parser = OptionParser()
@@ -24,6 +25,11 @@ def main() -> None:
     parser.add_option( '-b',
                     '--boxes',
                     dest = 'add_boxes',
+                    action = 'store_true',
+                    default = False)
+    parser.add_option( '-v',
+                    '--visualise',
+                    dest = 'visualise',
                     action = 'store_true',
                     default = False)
     (options, _) = parser.parse_args()
@@ -46,14 +52,22 @@ def main() -> None:
     render_results: str = str(out_path.joinpath('dataset').absolute())
 
     print('Crawling...')
-    crawl(crawl_urls, crawl_results)
+    # crawl(crawl_urls, crawl_results)
     print('Generate HTML...')
-    generate_html(crawl_results, int(options.top_values), html_results)
+    # generate_html(crawl_results, int(options.top_values), html_results)
     print('Render HTML...')
-    render_html(html_results, render_results)
+    # try:
+    #     render_html(html_results, render_results)
+    # except Exception as e:
+    #     print(e)
     if options.add_boxes:
+        print('Add Boxes...')
         boxes_results: Path = out_path.joinpath('dataset_boxes')
         add_boxes(render_results, render_results, boxes_results)
+    if options.visualise:
+        print('Visualise Crawl Data...')
+        visualise_results: Path = out_path.joinpath('visualise')
+        visualise(crawl_results, visualise_results)
 
 if __name__ == '__main__':
     main()

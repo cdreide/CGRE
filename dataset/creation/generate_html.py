@@ -35,7 +35,9 @@ def main() -> None:
 
     generate_html(Path(options.crawl_data_path), int(options.top_values), Path(options.out_path))
 
-def generate_html(crawl_data_path: Path, top_values: int, out_path: Path) -> None:
+def generate_html(crawl_data_path: str, top_values: int, out_path: str) -> None:
+    crawl_data_path = str(Path(crawl_data_path))
+
     crawl_data: dict = {}
     tmp_data: dict = {}
     with open(crawl_data_path) as f:
@@ -48,7 +50,6 @@ def generate_html(crawl_data_path: Path, top_values: int, out_path: Path) -> Non
     generator: Generator = Generator(crawl_data, out_path)
 
     print('Create Dataset:')
-    generator.save_directory: str = out_path
     generator.generate_html()
 
 class Layout(Enum):
@@ -60,16 +61,18 @@ class Layout(Enum):
     words = 6
 
 class Generator(object):
-    def __init__(self, crawl_data: dict, out_path: Path):
-        self.save_directory: Path = out_path
+    def __init__(self, crawl_data: dict, out_path: str):
+        self.script_path: Path = Path(__file__).parent.absolute()
+
+        self.save_directory: Path = Path(out_path)
         self.misc_path: Path = self.save_directory.joinpath('misc')
         self.misc_path.mkdir(parents=True, exist_ok=True)
-        shutil.copyfile('style.css', self.misc_path.joinpath('style.css'))
-        shutil.copyfile('script.js', self.misc_path.joinpath('script.js'))
+        shutil.copyfile(self.script_path.joinpath('resources/style.css'), self.misc_path.joinpath('style.css'))
+        shutil.copyfile(self.script_path.joinpath('resources/script.js'), self.misc_path.joinpath('script.js'))
         self.img_path: Path = self.misc_path.joinpath('imgs')
         if self.img_path.exists():
             shutil.rmtree(self.img_path)
-        shutil.copytree(Path('resources/imgs/'), self.img_path)
+        shutil.copytree(self.script_path.joinpath('resources/imgs/'), self.img_path)
 
         self.font_families: [str] = crawl_data['font_family_dict']
         self.font_sizes: [str] = crawl_data['font_size_dict']
@@ -82,8 +85,8 @@ class Generator(object):
         self.content_types = ['bible', 'lorem', 'random'] # all of them use usernames
         self.other_types = ['images_only', 'only_text', 'with_images']
 
-        self.word_list: [str] = prepare_words()
-        self.bible_list: [str] = prepare_bible()
+        self.word_list: [str] = self.prepare_words()
+        self.bible_list: [str] = self.prepare_bible()
         self.img_list: [str] = self.prepare_imgs()
 
 
@@ -97,7 +100,8 @@ class Generator(object):
                         count: int = 0
                         for layout in self.layouts:
                             # Generate path
-                            file_path: Path = Path(other_type.replace(' ', '_') + '/' + background_color.replace(' ', '_') + '/' + str(count))
+                            file_path_tmp: str = other_type + '/' + background_color + '/' + str(count)
+                            file_path: Path = Path(normalize_path(file_path_tmp))
                             count += 1
                             self.prepare(
                                 file_path=file_path,
@@ -118,7 +122,8 @@ class Generator(object):
                                                 bar.update(curr_it)
                                                 curr_it += 1
                                                 # Generate path
-                                                file_path: Path = Path(other_type.replace(' ', '_') + '/' + font_family.replace(' ', '_') + '/' + font_size.replace(' ', '_') + '/' + font_style.replace(' ', '_') + '/' + font_color.replace(' ', '_') + '/'.replace(' ', '_') + '/' + background_color.replace(' ', '_') + '/' + layout.name.replace(' ', '_') + '/' + content_type.replace(' ', '_'))
+                                                file_path_tmp: str = other_type + '/' + font_family + '/' + font_size + '/' + font_style + '/' + font_color + '/' + '/' + background_color + '/' + layout.name + '/' + content_type
+                                                file_path: Path = Path(normalize_path(file_path_tmp))
                                                 self.prepare(
                                                     file_path=file_path,
                                                     other_type=other_type,
@@ -575,6 +580,29 @@ class Generator(object):
 
         return img_list
 
+    # Creates word list from copy from '/user/share/dict/words'
+    def prepare_words(self) -> [str]:
+        words: str = ''
+        with open(self.script_path.joinpath('resources/words'), 'r') as f:
+            words = f.read()
+        return words.splitlines()
+
+    # Extracts every sentence of the Bible (King James Translation)
+    def prepare_bible(self) -> [str]:
+        bible_list: [str] = ['']
+        regex = r'([0-9]+\t[0-9]+\t\t[0-9]+\t)([a-zA-Z0-9.,\;\- ]*)'
+
+        with open(self.script_path.joinpath('resources/bible'), 'r') as f:
+            for line in f:
+                if line.startswith('#'):
+                    continue
+                sentence = re.findall(regex, line)[0][1]
+                bible_list.append(sentence)
+
+        del bible_list[0]
+        return bible_list
+
+
 def str_to_span(content: str):
     paragraph = p()
     for word in content.split():
@@ -588,28 +616,9 @@ def str_to_span(content: str):
     return paragraph
 
 
+def normalize_path(path: str):
+    return path.replace('(', '_').replace(')', '').replace(',', '').replace(' ', '_')
 
-# Creates word list from copy from '/user/share/dict/words'
-def prepare_words() -> [str]:
-    words: str = ''
-    with open('resources/words', 'r') as f:
-        words = f.read()
-    return words.splitlines()
-
-# Extracts every sentence of the Bible (King James Translation)
-def prepare_bible() -> [str]:
-    bible_list: [str] = ['']
-    regex = r'([0-9]+\t[0-9]+\t\t[0-9]+\t)([a-zA-Z0-9.,\;\- ]*)'
-
-    with open('resources/bible', 'r') as f:
-        for line in f:
-            if line.startswith('#'):
-                continue
-            sentence = re.findall(regex, line)[0][1]
-            bible_list.append(sentence)
-
-    del bible_list[0]
-    return bible_list
 
 if __name__ == '__main__':
     main()
