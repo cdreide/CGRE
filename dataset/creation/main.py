@@ -59,21 +59,23 @@ def main() -> None:
 
     print('Crawling...')
     # crawl(crawl_urls, crawl_results)
+
     print('Generating HTML...')
-    generate_html(crawl_results, int(options.top_values), html_results)
+    # generate_html(crawl_results, int(options.top_values), html_results)
+
     print('Rendering HTML...')
-    try:
-        render_html(html_results, render_results)
-    except Exception as e:
-        print(e)
+    render_html(html_results, render_results)
+
     if options.add_boxes:
         print('Adding Boxes...')
         boxes_results: Path = out_path.joinpath('dataset_boxes')
         add_boxes(render_results, render_results, boxes_results)
+    
     if options.visualise:
         print('Visualising Crawl Data...')
         visualise_results: Path = out_path.joinpath('visualise')
         visualise(crawl_results, visualise_results)
+
     if options.create_zip:
         print('Zipping Dataset...')
         create_zip(out_path)

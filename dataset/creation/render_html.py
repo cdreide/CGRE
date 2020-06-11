@@ -86,15 +86,18 @@ class Mediator(object):
             self.bar.update(self.count)
             self.count += 1
             if self.count >= len(self.urls):
-                sys.exit(1)
+                self.exit_app()
             self.next_url()
+
+
+
 
 class CefHandle(object):
 
     def run_cef(self, in_path: str, out_path: str) -> None:
 
         # Setup CEF
-        sys.excepthook = cef.ExceptHook  # to shutdown all CEF processes on error
+        sys.excepthook = customExceptHook  # to shutdown all CEF processes on error
         settings: Dict[str, bool] = { 
             'windowless_rendering_enabled': True,  # offscreen-rendering
         }
@@ -120,7 +123,9 @@ class CefHandle(object):
         cef.MessageLoop()
 
         # Cleanup
+        browser.CloseBrowser()
         cef.Shutdown()
+        print('\nDone!')
 
     # Create a browser
     def create_browser(self, settings, in_path: str, out_path: str) -> None:
@@ -139,11 +144,6 @@ class CefHandle(object):
         browser.SendFocusEvent(True)
         browser.WasResized()
         return browser
-
-    # Exit the application
-    def exit_app(self, browser: cef.PyBrowser) -> None:
-        browser.CloseBrowser()
-        cef.QuitMessageLoop()
 
 # Handle the rendering
 class RenderHandler(object):
@@ -165,11 +165,6 @@ class RenderHandler(object):
             browser.SetUserData('OnPaint.buffer_string', buffer_string)
             self.mediator.painted = True
             self.mediator.save_image()
-
-# TODO:     save only when truly the whole page was loaded
-# Problem:  sometimes it's loaded before 'OnPaint' gets called the last time
-#       ==> we cannot know when it was called the last time
-# **** Maybe okay considering the small html pages ****
 
 class LoadHandler(object):
     def __init__(self, mediator: Mediator):
@@ -202,6 +197,52 @@ def save_data_txt(value):
     Path(out_path).parent.mkdir(parents=True, exist_ok=True)
     with codecs.open(out_path, 'w', "utf-8") as f:
         f.write(value)
+
+# Needed to exit the Message Loop without killing the process:
+class FinishedException(Exception):
+    pass
+
+# Exit the application
+def exit_app() -> None:
+    raise FinishedException("Finished!") 
+
+def customExceptHook(exc_type, exc_value, exc_trace):
+    if exc_type == FinishedException:
+        cef.QuitMessageLoop()
+    else:
+        """Global except hook to exit app cleanly on error.
+        This hook does the following: in case of exception write it to
+        the "error.log" file, display it to the console, shutdown CEF
+        and exit application immediately by ignoring "finally" (_exit()).
+        """
+        print("[CEF Python] ExceptHook: catched exception, will shutdown CEF")
+        msg = "".join(traceback.format_exception(exc_type, exc_value,
+                                                exc_trace))
+        error_file = GetAppPath("error.log")
+        encoding = GetAppSetting("string_encoding") or "utf-8"
+        if type(msg) == bytes:
+            msg = msg.decode(encoding=encoding, errors="replace")
+        try:
+            with codecs.open(error_file, mode="a", encoding=encoding) as fp:
+                fp.write("\n[%s] %s\n" % (
+                        time.strftime("%Y-%m-%d %H:%M:%S"), msg))
+        except:
+            print("[CEF Python] WARNING: failed writing to error file: %s" % (
+                    error_file))
+        # Convert error message to ascii before printing, otherwise
+        # you may get error like this:
+        # | UnicodeEncodeError: 'charmap' codec can't encode characters
+        msg = msg.encode("ascii", errors="replace")
+        msg = msg.decode("ascii", errors="replace")
+        print("\n"+msg)
+        # There is a strange bug on Mac. Sometimes except message is not
+        # printed if QuitMessageLoop and Shutdown were called before the print
+        # message above.
+        QuitMessageLoop()
+        Shutdown()
+        # noinspection PyProtectedMember
+        os._exit(1)
+
 
 if __name__ == '__main__':
     main()
