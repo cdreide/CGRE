@@ -5,6 +5,7 @@ html {
 }
 
 body {
+    background: rgb(255,255,255);
     overflow: hidden; /* Hide scrollbars */
     margin: 0px;
 }

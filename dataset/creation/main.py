@@ -27,6 +27,18 @@ def main() -> None:
                     '--skip',
                     dest = 'skip',
                     default = '')
+    parser.add_option( '-c',
+                    '--crawl-name',
+                    dest = 'crawl_name',
+                    default = 'crawl.json')
+    parser.add_option( '-g',
+                    '--generated-name',
+                    dest = 'generated_name',
+                    default = 'html')
+    parser.add_option( '-r',
+                    '--render-name',
+                    dest = 'render_name',
+                    default = 'dataset')
     parser.add_option( '-b',
                     '--boxes',
                     dest = 'add_boxes',
@@ -42,6 +54,9 @@ def main() -> None:
                     dest = 'create_zip',
                     action = 'store_true',
                     default = False)
+
+
+
     (options, _) = parser.parse_args()
 
     try:
@@ -58,9 +73,9 @@ def main() -> None:
 
     skip: str = options.skip
 
-    crawl_results: str = str(out_path.joinpath('crawl.json').absolute())
-    html_results: str = str(out_path.joinpath('html').absolute())
-    render_results: str = str(out_path.joinpath('dataset').absolute())
+    crawl_results: str = str(out_path.joinpath(options.crawl_name).absolute())
+    html_results: str = str(out_path.joinpath(options.generated_name).absolute())
+    render_results: str = str(out_path.joinpath(options.render_name).absolute())
 
     if 'c' not in skip:
         print('Crawling...')
