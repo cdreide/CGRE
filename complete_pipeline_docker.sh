@@ -8,7 +8,7 @@ mkdir -p /data/results
 echo '### Creation ###'
 cd ./dataset/creation
 echo '# Generating'
-pipenv run python main.py -i ../styleCrawling/resources/urls_us -o /data/results -t 3 -b -v -s cg
+python main.py -i ../styleCrawling/resources/urls_us -o /data/results -t 3 -b -v -s cg
 
 
 ### Recognition ###
@@ -34,6 +34,6 @@ echo '## Determination on localised (complete)'
 echo '## Evaluation'
 cd ../../../evaluation
 echo '# Determination'
-pipenv run python evaluation.py /data/results/dataset /data/results/dataset_tesseract_determiner/ -cp 0.5 -lt 2
+python evaluation.py /data/results/dataset /data/results/dataset_tesseract_determiner/ -cp 0.5 -lt 2
 echo '# Localised (complete)'
-pipenv run python evaluation.py /data/results/dataset /data/results/dataset_tesseract_complete/ -cp 0.5 -lt 2
+python evaluation.py /data/results/dataset /data/results/dataset_tesseract_complete/ -cp 0.5 -lt 2
