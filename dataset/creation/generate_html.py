@@ -254,7 +254,7 @@ class Generator(object):
         with doc.head:
             link(rel='stylesheet', href=str(Path(misc_prefix).joinpath('style.css')))
 
-        with doc.body:
+        with doc.body(style='background: rgb(255,255,255);'):
             with div(cls='grid', style=style):
                 if layout == Layout.center:
                     if 0 not in indexes:
