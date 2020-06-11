@@ -87,6 +87,7 @@ RUN apt-get purge -y curl \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-COPY complete_pipeline.sh /app/complete_pipeline.sh
+COPY complete_pipeline_docker.sh /app/complete_pipeline_docker.sh
 COPY dataset /app/dataset
 COPY evaluation /app/evaluation
+
