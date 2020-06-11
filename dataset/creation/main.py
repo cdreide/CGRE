@@ -23,6 +23,10 @@ def main() -> None:
                     '--top',
                     dest = 'top_values',
                     default = 1)
+    parser.add_option( '-s',
+                    '--skip',
+                    dest = 'skip',
+                    default = '')
     parser.add_option( '-b',
                     '--boxes',
                     dest = 'add_boxes',
@@ -52,19 +56,23 @@ def main() -> None:
         print('Please provide an output path! (-o)')
         return
 
+    skip: str = options.skip
 
     crawl_results: str = str(out_path.joinpath('crawl.json').absolute())
     html_results: str = str(out_path.joinpath('html').absolute())
     render_results: str = str(out_path.joinpath('dataset').absolute())
 
-    print('Crawling...')
-    # crawl(crawl_urls, crawl_results)
+    if 'c' not in skip:
+        print('Crawling...')
+        crawl(crawl_urls, crawl_results)
 
-    print('Generating HTML...')
-    # generate_html(crawl_results, int(options.top_values), html_results)
+    if 'g' not in skip:
+        print('Generating HTML...')
+        generate_html(crawl_results, int(options.top_values), html_results)
 
-    print('Rendering HTML...')
-    render_html(html_results, render_results)
+    if 'r' not in skip:
+        print('Rendering HTML...')
+        render_html(html_results, render_results)
 
     if options.add_boxes:
         print('Adding Boxes...')
