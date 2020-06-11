@@ -24,11 +24,7 @@ function get_data_txt() {
     for(i = 0; i < spans.length; i++) {
         let spanRect = spans[i].getBoundingClientRect()
         let divRect = spans[i].parentNode.parentNode.getBoundingClientRect()
-        // console.log(divRect);
-        if (spanRect.top <= divRect.top + divRect.height &&
-            spanRect.left <= divRect.left + divRect.width &&
-            spanRect.top + spanRect.height <= divRect.top + divRect.height &&
-            spanRect.left + spanRect.width <= divRect.left + divRect.width &&
+        if (spans[i].style.display !== 'none' &&
             spans[i].innerText.match(/^[a-zA-Z0-9]+/)) {
                 let word = spans[i].innerText
                 output += word + '\t(' + Math.round(spanRect.left) + ',' + Math.round(spanRect.top) + ',' + Math.round(spanRect.width) + ',' + Math.round(spanRect.height) + ')\n'

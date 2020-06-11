@@ -9,6 +9,7 @@ from dataset.creation.generate_html import generate_html
 from dataset.creation.render_html import render_html
 from evaluation.add_boxes import add_boxes
 from dataset.styleCrawling.visualise import visualise
+from dataset.creation.zip_dataset import create_zip
 
 def main() -> None:
     parser = OptionParser()
@@ -32,6 +33,11 @@ def main() -> None:
                     dest = 'visualise',
                     action = 'store_true',
                     default = False)
+    parser.add_option( '-z',
+                    '--zip',
+                    dest = 'create_zip',
+                    action = 'store_true',
+                    default = False)
     (options, _) = parser.parse_args()
 
     try:
@@ -53,21 +59,25 @@ def main() -> None:
 
     print('Crawling...')
     # crawl(crawl_urls, crawl_results)
-    print('Generate HTML...')
-    # generate_html(crawl_results, int(options.top_values), html_results)
-    print('Render HTML...')
-    # try:
-    #     render_html(html_results, render_results)
-    # except Exception as e:
-    #     print(e)
+    print('Generating HTML...')
+    generate_html(crawl_results, int(options.top_values), html_results)
+    print('Rendering HTML...')
+    try:
+        render_html(html_results, render_results)
+    except Exception as e:
+        print(e)
     if options.add_boxes:
-        print('Add Boxes...')
+        print('Adding Boxes...')
         boxes_results: Path = out_path.joinpath('dataset_boxes')
         add_boxes(render_results, render_results, boxes_results)
     if options.visualise:
-        print('Visualise Crawl Data...')
+        print('Visualising Crawl Data...')
         visualise_results: Path = out_path.joinpath('visualise')
         visualise(crawl_results, visualise_results)
+    if options.create_zip:
+        print('Zipping Dataset...')
+        create_zip(out_path)
+
 
 if __name__ == '__main__':
     main()

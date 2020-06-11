@@ -8,7 +8,7 @@ mkdir -p results
 echo '### Creation ###'
 cd ./dataset/creation
 echo '# Generating'
-pipenv run python main.py -i ../styleCrawling/resources/urls_us -o ../../results -t 3 -b
+# pipenv run python main.py -i ../styleCrawling/resources/urls_us -o ../../results -t 3 -b -v
 
 ### Recognition ###
 echo '### Recognition ###'
@@ -17,17 +17,17 @@ echo '### Recognition ###'
 echo '## Localisation'
 cd ../../recognition/localisation/tesseract_localiser
 ./setup.sh
-./build/tesseract_localiser ../../results/dataset ../../results/dataset_tesseract_localised
+./build/tesseract_localiser ../../../results/dataset ../../../results/dataset_tesseract_localised
 
 ## Determination on ideal
 echo '## Determination on ideal'
 cd ../../determination/tesseract_determiner
 ./setup.sh
-./build/tesseract_determiner ../../results/dataset ../../results/dataset ../../results/dataset_tesseract_determiner
+./build/tesseract_determiner ../../../results/dataset ../../../results/dataset ../../../results/dataset_tesseract_determiner
 
 ## Determination on localised (complete)
 echo '## Determination on localised (complete)'
-./build/tesseract_determiner ../../results/dataset ../../results/dataset_tesseract_localised ../../results/dataset_tesseract_complete
+./build/tesseract_determiner ../../../results/dataset ../../../results/dataset_tesseract_localised ../../../results/dataset_tesseract_complete
 
 ## Evaluation
 echo '## Evaluation'
