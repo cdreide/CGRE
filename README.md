@@ -20,6 +20,56 @@ install:
 start shell:
 `` pipenv shell ``
 
+
+main.py
+    -i:
+        a file containing one url per line to use for crawling (not needed when crawling is skipped)
+    -o:
+        path to an output folder
+    -t:
+        provide a number indicating on which entry to stop when parsing the crawl data (i.e. '-t 3' the 3 most used stylings per attribute will be parsed)
+        Default:
+            1
+    -s:
+        enter a string indicating which step you want to skip, if you're string contains:
+        'c' crawling will be skipped and the program assumes crawl data in '-c'
+        'g' html generating will be skipped and the program assumes html data in '-g'
+        'r' html rendering will be skipped and the program assumes rendered data in '-r'
+    -c:
+        provide a path to where the crawl data file will be saved (in output folder)
+        Default:
+            'html'
+    -g:
+        provide a path to where the html data file will be saved (in output folder)
+        Default:
+            'crawl.json'
+    -r:
+        provide a path to where the rendered data file will be saved (in output folder)
+        Default:
+            'dataset'
+    -b:
+        adds boxes to the rendered data, saved in output folder with the '-r' + '_boxes'
+    -v:
+        creates visualisations for the crawled data
+    -z:
+        zips the output folder
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 generate:
 `` pipenv run python generate_html.py ``
     => './html/font_family/font_size/font_style/layout.html'

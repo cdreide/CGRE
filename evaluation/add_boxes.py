@@ -2,7 +2,6 @@ import argparse
 import time
 from pathlib import Path
 import re
-import os
 import cv2
 import matplotlib.pyplot as plt
 import progressbar

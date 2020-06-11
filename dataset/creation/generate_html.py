@@ -1,10 +1,8 @@
 from optparse import OptionParser
-import os
 from pathlib import Path
-import sys
 import htmlmin
 import dominate
-from dominate.tags import *
+from dominate.tags import body, head, script, style, div, p, span, link, img
 import lorem
 import re
 from enum import Enum
@@ -13,8 +11,6 @@ import codecs
 import json
 import random
 import shutil
-
-# html/font_family/font_size/font_style/layout
 
 def main() -> None:
     parser = OptionParser()

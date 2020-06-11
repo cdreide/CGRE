@@ -1,18 +1,14 @@
 from optparse import OptionParser
 from cefpython3 import cefpython as cef
-import os
 from pathlib import Path
 import sys
-from multiprocessing import Process, Queue
 from PIL import Image
 from typing import Dict, Tuple
-import asyncio
 import re
-import json
-import csv
 import codecs
 import progressbar
-
+import traceback
+import time
 
 input_dir: str = ''
 output_dir: str = ''
@@ -43,7 +39,6 @@ class Mediator(object):
         self.viewport_size: Tuple[int, int] = (1024, 768) # (1100, 800)
         self.browser: cef.PyBrowser = browser
         self.buffer: str = ''
-        self.lock: asyncio.Lock = asyncio.Lock()
         self.in_dir: str = in_path
         self.out_dir: str = out_path
         self.current_file: str = ''
@@ -51,7 +46,7 @@ class Mediator(object):
         self.urls: [str] = ['']
 
         for path in Path(self.in_dir).rglob('*.html'):
-            self.urls.append('file://' + os.path.abspath(path))
+            self.urls.append('file://' + str(Path(path).absolute()))
         self.urls.pop(0)
         self.bar = progressbar.ProgressBar(max_value=len(self.urls))
         self.count: int = 0
@@ -86,10 +81,8 @@ class Mediator(object):
             self.bar.update(self.count)
             self.count += 1
             if self.count >= len(self.urls):
-                self.exit_app()
+                exit_app()
             self.next_url()
-
-
 
 
 class CefHandle(object):
@@ -218,8 +211,8 @@ def customExceptHook(exc_type, exc_value, exc_trace):
         print("[CEF Python] ExceptHook: catched exception, will shutdown CEF")
         msg = "".join(traceback.format_exception(exc_type, exc_value,
                                                 exc_trace))
-        error_file = GetAppPath("error.log")
-        encoding = GetAppSetting("string_encoding") or "utf-8"
+        error_file = "error.log"
+        encoding = "utf-8"
         if type(msg) == bytes:
             msg = msg.decode(encoding=encoding, errors="replace")
         try:
@@ -238,10 +231,10 @@ def customExceptHook(exc_type, exc_value, exc_trace):
         # There is a strange bug on Mac. Sometimes except message is not
         # printed if QuitMessageLoop and Shutdown were called before the print
         # message above.
-        QuitMessageLoop()
-        Shutdown()
+        cef.QuitMessageLoop()
+        cef.Shutdown()
         # noinspection PyProtectedMember
-        os._exit(1)
+        quit()
 
 
 if __name__ == '__main__':

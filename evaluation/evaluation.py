@@ -11,7 +11,6 @@ import Levenshtein.StringMatcher as levenshtein
 import progressbar
 import csv
 import codecs
-import sys
 
 # Type Definitions
 Line = Dict[str, str]
@@ -50,7 +49,7 @@ def main() -> None:
 
     if coordinate_threshold != 0 and coordinate_percent != 1.0:
         print('Please provide either coordinate_threshold or coordinate_percent!')
-        sys.exit(1)
+        quit()
 
     # Input
     print('\n')

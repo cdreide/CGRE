@@ -55,15 +55,16 @@ def main() -> None:
                     action = 'store_true',
                     default = False)
 
-
-
     (options, _) = parser.parse_args()
 
-    try:
-        crawl_urls: Path = Path(options.in_path)
-    except:
-        print('Please provide an input url file! (-i)')
-        return
+    skip: str = options.skip
+
+    if 'c' not in skip:
+        try:
+            crawl_urls: Path = Path(options.in_path)
+        except:
+            print('Please provide an input url file! (-i)')
+            return
 
     try:
         out_path: Path = Path(options.out_path)
@@ -71,11 +72,10 @@ def main() -> None:
         print('Please provide an output path! (-o)')
         return
 
-    skip: str = options.skip
-
     crawl_results: str = str(out_path.joinpath(options.crawl_name).absolute())
     html_results: str = str(out_path.joinpath(options.generated_name).absolute())
     render_results: str = str(out_path.joinpath(options.render_name).absolute())
+
 
     if 'c' not in skip:
         print('Crawling...')
@@ -91,7 +91,7 @@ def main() -> None:
 
     if options.add_boxes:
         print('Adding Boxes...')
-        boxes_results: Path = out_path.joinpath('dataset_boxes')
+        boxes_results: Path = out_path.joinpath(options.render_name + '_boxes')
         add_boxes(render_results, render_results, boxes_results)
     
     if options.visualise:
