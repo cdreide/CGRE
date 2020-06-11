@@ -1,5 +1,9 @@
 FROM ubuntu:20.04
 
+# Set entrypoint
+COPY entrypoint.sh /entrypoint.sh
+ENTRYPOINT ["/entrypoint.sh"]
+
 # Linux Dependencies Installation
 ARG DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && \
@@ -27,6 +31,8 @@ RUN apt-get update && \
     libgtkglext1-dev \
     libxtst6 \
     libasound2 \
+    libxss-dev\
+    libx11-dev\
     python3 \
     python3-dev \
     python3-pip \
@@ -57,14 +63,14 @@ RUN pip install --upgrade pip \
 COPY Pipfile Pipfile.lock /app/
 WORKDIR /app
 RUN pipenv install --deploy --ignore-pipfile
-COPY . /app
+
 
 # Download Chromium for cefpython
 RUN pipenv run python -c 'import pyppeteer; pyppeteer.chromium_downloader.download_chromium()'
 
 # Recognition
-
 # Compile C++ Code
+COPY recognition /app/recognition
 RUN cd /app/recognition/determination/tesseract_determiner && ./setup.sh && \
     cd /app/recognition/localisation/tesseract_localiser && ./setup.sh
 
@@ -80,3 +86,7 @@ RUN apt-get purge -y curl \
     apt-get autoremove -y && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
+
+COPY complete_pipeline.sh /app/complete_pipeline.sh
+COPY dataset /app/dataset
+COPY evaluation /app/evaluation
