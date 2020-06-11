@@ -14,12 +14,15 @@ Pre:
         ``pyenv local 3.7.2``
         ``pip install -U setuptools``
 
-install:
-`` pipenv install . --dev ``
 
-start shell:
-`` pipenv shell ``
+build docker image:
+`` docker build -t ocr . ``
 
+start docker container (pipenv shell will be started automatically):
+`` docker run -v AbsolutePathToSomeDir:/data:rw -ti ocr ``
+
+example call to create dataset:
+`` python dataset/creation/main.py -o /data/results -t 3 -v -b ``
 
 main.py
     -i:
