@@ -38,6 +38,7 @@ RUN apt-get update && \
     python3-pip \
     libopencv-dev \
     libtesseract-dev \
+    xvfb \
     g++ \
     cmake
 
@@ -69,6 +70,12 @@ RUN pipenv install --deploy --ignore-pipfile
 RUN pipenv run python -c 'import pyppeteer; pyppeteer.chromium_downloader.download_chromium()'
 
 # Recognition
+# Get language data
+RUN wget https://github.com/tesseract-ocr/tessdata/raw/master/eng.traineddata
+RUN mkdir -p /usr/share/tessdata/
+RUN mv -v eng.traineddata /usr/share/tessdata/
+ENV TESSDATA_PREFIX /usr/share/tessdata/
+
 # Compile C++ Code
 COPY recognition /app/recognition
 RUN cd /app/recognition/determination/tesseract_determiner && ./setup.sh && \
@@ -91,3 +98,8 @@ COPY complete_pipeline_docker.sh /app/complete_pipeline_docker.sh
 COPY dataset /app/dataset
 COPY evaluation /app/evaluation
 
+
+ENV DISPLAY :99
+ADD docker_start.sh /docker_start.sh
+RUN chmod a+x /docker_start.sh
+CMD /docker_start.sh

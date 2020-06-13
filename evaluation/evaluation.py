@@ -23,6 +23,8 @@ def main() -> None:
     parser.add_argument('ideal', metavar='ideal', type=str, nargs=1, help='a directories containing the ideal dataset')
     # Recognized Directory
     parser.add_argument('recognized', metavar='recognized', type=str, nargs=1, help='a directories containing the recognized dataset')
+    # Output Directory
+    parser.add_argument('-o', metavar='output', type=str, nargs=1, help='A path where the results can be saved.')
     # Accepted Coordinate Threshold
     parser.add_argument('-ct', metavar='coordinate_threshold', type=int, nargs=1, default=0, help='how off can the localisation be? (Default is 0)')
     # How many percent of the ground truth box should be in the accepted box? (Default ist 1)
@@ -30,13 +32,12 @@ def main() -> None:
     # Accepted Levenshtein Distance
     parser.add_argument('-lt', metavar='levenshtein_threshold', type=int, nargs=1, default=0, help='how off can the determination be? (Default is 0)')
     args = parser.parse_args()
-
     # INPUT FEEDBACK
     # Paths
     ideal_path: Path = Path(args.ideal[0]).absolute()
     recognized_path: Path = Path(args.recognized[0]).absolute()
-    outpath: str = str(Path('../results/evaluation').absolute())
-    Path(outpath).mkdir(parents=True, exist_ok=True)
+    outpath: Path = Path(args.o[0]).absolute()
+    outpath.mkdir(parents=True, exist_ok=True)
     # Acceptance
     coordinate_threshold: int = args.ct[0] if isinstance(args.ct, list) else args.ct
     # https://towardsdatascience.com/evaluating-performance-of-an-object-detection-model-137a349c517b
@@ -90,7 +91,7 @@ def main() -> None:
         recognized: Line = [{'word': '', 'left': '', 'top': '', 'width': '', 'height': ''}]
 
         with open(str(ideal_file_path), 'r') as f:
-            print('load:\t' + str(ideal_file_path))
+            # print('load:\t' + str(ideal_file_path))
             for line in f:
                 # print(line)
                 if len(line) <= 1 or 'file:///' in line:
@@ -101,7 +102,7 @@ def main() -> None:
                         del ideal[0]
                         first_ideal = False
         with open(recognized_file_path, 'r') as f:
-            print('load:\t' + recognized_file_path)
+            # print('load:\t' + recognized_file_path)
             for line in f:
                 if len(line) <= 1 or 'file:///' in line:
                     continue
@@ -264,12 +265,12 @@ def main() -> None:
     print('\n' + log)
 
     # Save the evaluation results
-    log_filename: str = outpath + 'evaluation_' + ideal_path.name + '_' + recognized_path.name + '.txt'
+    log_filename: str = str(outpath.joinpath('evaluation_' + ideal_path.name + '_' + recognized_path.name + '.txt'))
     with codecs.open(log_filename, 'w', "utf-8-sig") as f:
         f.write(log)
     print('\ncreated:\t' + log_filename)
 
-    csv_filename: str = outpath + 'evaluation_' + ideal_path.name + '_' + recognized_path.name + '.csv'
+    csv_filename: str = str(outpath.joinpath('evaluation_' + ideal_path.name + '_' + recognized_path.name + '.csv'))
     csv_keys = file_results[0].keys()
     with codecs.open(csv_filename, 'w', "utf-8-sig") as f:
         dict_writer = csv.DictWriter(f, csv_keys)

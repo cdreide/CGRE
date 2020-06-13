@@ -34,6 +34,6 @@ echo '## Determination on localised (complete)'
 echo '## Evaluation'
 cd ../../../evaluation
 echo '# Determination'
-pipenv run python evaluation.py ../results/dataset ../results/dataset_tesseract_determiner/ -cp 0.5 -lt 2
+pipenv run python evaluation.py ../results/dataset ../results/dataset_tesseract_determiner/ -cp 0.5 -lt 2 -o ../results/evaluation_determiner
 echo '# Localised (complete)'
-pipenv run python evaluation.py ../results/dataset ../results/dataset_tesseract_complete/ -cp 0.5 -lt 2
+pipenv run python evaluation.py ../results/dataset ../results/dataset_tesseract_complete/ -cp 0.5 -lt 2 -o ../results/evaluation_complete

@@ -95,6 +95,7 @@ class CefHandle(object):
             'windowless_rendering_enabled': True,  # offscreen-rendering
         }
         switches: Dict[str, str] = {
+            # 'headless': '',
             'disable-gpu': '',
             'disable-gpu-compositing': '',
             'enable-begin-frame-scheduling': '',

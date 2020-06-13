@@ -6,6 +6,7 @@
 #include <filesystem>
 #include <vector>
 #include <regex>
+
 namespace fs = std::filesystem;
 
 int main (int argc, char *argv[]) {
@@ -93,8 +94,7 @@ int main (int argc, char *argv[]) {
                 delete[] result;
 
                 // Create Output
-                if (outText.length() > 2)
-                    outText = outText.erase(outText.length() - 3, outText.length() - 1);
+                outText.erase(std::remove(outText.begin(), outText.end(), '\n'), outText.end());
                 std::string outLine = outText + "\t" + "(" + std::to_string(left) + "," + std::to_string(top) + "," + std::to_string(width) + "," + std::to_string(height) + ")";
                 outLines.push_back(outLine);
             }
