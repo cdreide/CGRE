@@ -99,7 +99,6 @@ def main() -> None:
                 else:
                     ideal.append(get_word_coordinate_dict(line))
                     if first_ideal:
-                        del ideal[0]
                         first_ideal = False
         with open(recognized_file_path, 'r') as f:
             # print('load:\t' + recognized_file_path)
@@ -109,9 +108,10 @@ def main() -> None:
                 else:
                     recognized.append(get_word_coordinate_dict(line))
                     if first_recognized:
-                        del recognized[0]
                         first_recognized = False
 
+        del ideal[0]
+        del recognized[0]
         # EVALUATE THE DATA
         file_result: Result = {'path': recognized_file_path, 'tp_l': '', 'fp_l': '', 'fn_l': '', 'tp_d': '', 'fp_d': '', 'fn_d': ''} 
 
@@ -134,10 +134,12 @@ def main() -> None:
             found = False
         FP_l = len(recognized) - TP_l # FP = Pr - TP (Pr are the overall localized)
 
-        # print('ideal_len: ' + str(len(ideal)))
-        # print('recognized_len: ' + str(len(recognized)))
-        # print('TP_l: ' + str(TP_l))
-        # print('FP_l: ' + str(FP_l))
+        print('\nideal_len: ' + str(len(ideal)))
+        print('\nideal: ' + str(ideal))
+        print('recognized_len: ' + str(len(recognized)))
+        print('recognized: ' + str(recognized))
+        print('TP_l: ' + str(TP_l))
+        print('FP_l: ' + str(FP_l))
 
         # save the values
         file_result['tp_l'] = str(TP_l)
@@ -231,7 +233,7 @@ def main() -> None:
     # Input
     log: str = ''
     log += 'ideal_path:\t\t' + str(ideal_path) + '\n'
-    log += 'recognized_path:\t' + str(ideal_path) + '\n'
+    log += 'recognized_path:\t' + str(recognized_path) + '\n'
 
     # Configuation
     log += '\n'
