@@ -134,12 +134,12 @@ def main() -> None:
             found = False
         FP_l = len(recognized) - TP_l # FP = Pr - TP (Pr are the overall localized)
 
-        print('\nideal_len: ' + str(len(ideal)))
-        print('\nideal: ' + str(ideal))
-        print('recognized_len: ' + str(len(recognized)))
-        print('recognized: ' + str(recognized))
-        print('TP_l: ' + str(TP_l))
-        print('FP_l: ' + str(FP_l))
+        # print('\nideal_len: ' + str(len(ideal)))
+        # print('\nideal: ' + str(ideal))
+        # print('recognized_len: ' + str(len(recognized)))
+        # print('recognized: ' + str(recognized))
+        # print('TP_l: ' + str(TP_l))
+        # print('FP_l: ' + str(FP_l))
 
         # save the values
         file_result['tp_l'] = str(TP_l)
