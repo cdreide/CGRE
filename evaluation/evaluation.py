@@ -79,7 +79,7 @@ def main() -> None:
     overall_FP_d: int = 0    # False Positives  (recognized word not in ideal words)
     overall_FN_d: int = 0    # False Negatives  (ideal word not in recognized words [in same coordinates])
 
-    file_results: [Result] = [{'path': '', 'tp_l': '', 'fp_l': '', 'fn_l': '', 'tp_d': '', 'fp_d': '', 'fn_d': ''}] 
+    file_results: [Result] = [{'path': '', 'tp_l': '', 'fp_l': '', 'fn_l': '', 'tp_d': '', 'fp_d': '', 'fn_d': '', 'time_l': '', 'time_d': '', 'time_c': ''}] 
 
     # EVALUATE THE FILES
     for i in progressbar.progressbar(range(len(ideal_files))):
@@ -90,12 +90,17 @@ def main() -> None:
         ideal: Line = [{'word': '', 'left': '', 'top': '', 'width': '', 'height': ''}]
         recognized: Line = [{'word': '', 'left': '', 'top': '', 'width': '', 'height': ''}]
 
+        time_l: int = 0
+        time_d: int = 0
+
         with open(str(ideal_file_path), 'r') as f:
             # print('load:\t' + str(ideal_file_path))
             for line in f:
                 # print(line)
                 if len(line) <= 1 or 'file:///' in line:
                     continue
+                if '% Time' in line:
+                    time_l += get_time(line)
                 else:
                     ideal.append(get_word_coordinate_dict(line))
                     if first_ideal:
@@ -105,6 +110,8 @@ def main() -> None:
             for line in f:
                 if len(line) <= 1 or 'file:///' in line:
                     continue
+                if '% Time' in line:
+                    time_d += get_time(line)
                 else:
                     recognized.append(get_word_coordinate_dict(line))
                     if first_recognized:
@@ -175,6 +182,9 @@ def main() -> None:
         file_result['tp_d'] = str(TP_d)
         file_result['fp_d'] = str(FP_d)
         file_result['fn_d'] = str(FN_d)
+        file_result['time_l'] = str(time_l)
+        file_result['time_d'] = str(time_d)
+        file_result['time_c'] = str(time_l + time_d)
         overall_TP_d += TP_d
         overall_FP_d += FP_d
         overall_FN_d += FN_d
@@ -291,15 +301,18 @@ def get_word_coordinate_dict(line: str) -> Line:
     splitted_line = line.split('\t')
     try:
         output['word'] = splitted_line[0]
-        coordinates = re.search(r'([0-9]+),([0-9]+),([0-9]+),([0-9]+)', splitted_line[1]).groups()
+        coordinates = re.search(r'(\d+),(\d+),(\d+),(\d+)', splitted_line[1]).groups()
         output['left'] = coordinates[0]
         output['top'] = coordinates[1]
         output['width'] = coordinates[2]
         output['height'] = coordinates[3]
     except:
-        return output
+        pass
 
     return output
+
+def get_time(line: str) -> int:
+    return int(re.search(r'\d+', line)[0])
 
 def validate_coordinate(ideal_line: Line, recognized_line: Line, coordinate_threshold: int, coordinate_percent: float, use_threshold: bool) -> bool:
     valid_input: bool = (

@@ -73,8 +73,8 @@ class Generator(object):
         self.font_families: [str] = crawl_data['font_family_dict']
         self.font_sizes: [str] = crawl_data['font_size_dict']
         self.font_styles: [str] = crawl_data['font_style_dict']
-        # self.font_weights: [str] = crawl_data['font_weight_dict']
-        # self.text_decorations: [str] = crawl_data['text_decoration_dict']
+        self.font_weights: [str] = crawl_data['font_weight_dict']
+        self.text_decorations: [str] = crawl_data['text_decoration_dict']
         self.font_colors: [str] = crawl_data['font_color_dict']
         self.background_colors: [str] = crawl_data['background_color_dict']
         self.layouts = [e for e in Layout]
@@ -109,30 +109,30 @@ class Generator(object):
                     for font_family in self.font_families:
                         for font_size in self.font_sizes:
                             for font_style in self.font_styles:
-                                # for font_style in self.font_styles:
-                                # for text_decoration in self.text_decorations:
-                                for font_color in self.font_colors:
-                                    for background_color in self.background_colors:
-                                        for layout in self.layouts:
-                                            for content_type in self.content_types:
-                                                bar.update(curr_it)
-                                                curr_it += 1
-                                                # Generate path
-                                                file_path_tmp: str = other_type + '/' + font_family + '/' + font_size + '/' + font_style + '/' + font_color + '/' + '/' + background_color + '/' + layout.name + '/' + content_type
-                                                file_path: Path = Path(normalize_path(file_path_tmp))
-                                                self.prepare(
-                                                    file_path=file_path,
-                                                    other_type=other_type,
-                                                    font_family=font_family,
-                                                    font_size=font_size,
-                                                    font_style=font_style,
-                                                    # font_weight=font_weight,
-                                                    # text_decoration=text_decoration,
-                                                    font_color=font_color,
-                                                    background_color=background_color,
-                                                    layout=layout,
-                                                    content_type=content_type,
-                                                    )
+                                for font_weight in self.font_weights:
+                                    for text_decoration in self.text_decorations:
+                                        for font_color in self.font_colors:
+                                            for background_color in self.background_colors:
+                                                for layout in self.layouts:
+                                                    for content_type in self.content_types:
+                                                        bar.update(curr_it)
+                                                        curr_it += 1
+                                                        # Generate path
+                                                        file_path_tmp: str = other_type + '/' + font_family + '/' + font_size + '/' + font_style + '/' + font_color + '/' + '/' + background_color + '/' + layout.name + '/' + content_type
+                                                        file_path: Path = Path(normalize_path(file_path_tmp))
+                                                        self.prepare(
+                                                            file_path=file_path,
+                                                            other_type=other_type,
+                                                            font_family=font_family,
+                                                            font_size=font_size,
+                                                            font_style=font_style,
+                                                            font_weight=font_weight,
+                                                            text_decoration=text_decoration,
+                                                            font_color=font_color,
+                                                            background_color=background_color,
+                                                            layout=layout,
+                                                            content_type=content_type,
+                                                            )
 
 
     def prepare(self,
