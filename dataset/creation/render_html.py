@@ -24,7 +24,7 @@ def main() -> None:
                 '--out',
                 dest = 'out_path',
                 metavar = 'FILE' )
-    (options, args) = parser.parse_args()
+    (options, _) = parser.parse_args()
 
     render_html(options.in_path, options.out_path)
 

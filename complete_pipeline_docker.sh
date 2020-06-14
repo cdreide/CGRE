@@ -8,7 +8,7 @@ mkdir -p /data/results
 echo '### Creation ###'
 cd ./dataset/creation
 echo '# Generating'
-python main.py -i ../styleCrawling/resources/urls_us -o /data/results -t 3 -b -v -z
+# python main.py -i ../styleCrawling/resources/urls_us -o /data/results -t 3 -b -v -z
 
 
 ### Recognition ###

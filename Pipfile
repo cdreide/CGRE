@@ -15,6 +15,7 @@ progressbar2 = "*"
 htmlmin = "*"
 requests-html = "*"
 selenium = "*"
+colormath = "*"
 
 [dev-packages]
 pylint = "*"

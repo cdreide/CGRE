@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "1637ef1aa39e62a27cf6b70b7870d9f5432092ff31ad5261bca36818f76589b6"
+            "sha256": "d032f8a6872b25279001a355874ad3ed884d94f53ef0be457e754c678d0d1270"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -62,6 +62,13 @@
             ],
             "version": "==3.0.4"
         },
+        "colormath": {
+            "hashes": [
+                "sha256:3d4605af344527da0e4f9f504fad7ddbebda35322c566a6c72e28edb1ff31217"
+            ],
+            "index": "pypi",
+            "version": "==3.0.0"
+        },
         "cssselect": {
             "hashes": [
                 "sha256:f612ee47b749c877ebae5bb77035d8f4202c6ad0f0fc1271b3c18ad6c4468ecf",
@@ -75,6 +82,13 @@
                 "sha256:cd7b2d1018258d7247a71425e9f26463dfb444d411c39569972f4ce586b0c9d8"
             ],
             "version": "==0.10.0"
+        },
+        "decorator": {
+            "hashes": [
+                "sha256:41fa54c2a0cc4ba648be4fd43cff00aedf5b9465c9bf18d64325bc225f08f760",
+                "sha256:e3a62f0520172440ca0dcc823749319382e377f37f140a0b99ef45fecb84bfe7"
+            ],
+            "version": "==4.4.2"
         },
         "dominate": {
             "hashes": [
@@ -176,6 +190,13 @@
             ],
             "index": "pypi",
             "version": "==3.2.1"
+        },
+        "networkx": {
+            "hashes": [
+                "sha256:cdfbf698749a5014bf2ed9db4a07a5295df1d3a53bf80bf3cbd61edf9df05fa1",
+                "sha256:f8f4ff0b6f96e4f9b16af6b84622597b5334bf9cae8cf9b2e42e7985d5c95c64"
+            ],
+            "version": "==2.4"
         },
         "numpy": {
             "hashes": [

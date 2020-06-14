@@ -11,6 +11,9 @@ import codecs
 import json
 import random
 import shutil
+from colormath.color_diff import delta_e_cie1976
+from colormath.color_conversions import convert_color
+from colormath.color_objects import XYZColor, sRGBColor, LabColor
 
 def main() -> None:
     parser = OptionParser()
@@ -27,7 +30,7 @@ def main() -> None:
                     '--out',
                     dest = 'out_path',
                     metavar = 'FOLDER' )
-    (options, args) = parser.parse_args()
+    (options, _) = parser.parse_args()
 
     generate_html(Path(options.crawl_data_path), int(options.top_values), Path(options.out_path))
 
@@ -85,6 +88,7 @@ class Generator(object):
         self.bible_list: [str] = self.prepare_bible()
         self.img_list: [str] = self.prepare_imgs()
 
+        self.min_delta_e: float = 5.
 
     def generate_html(self):
         iterations = (len(self.other_types)-1) * len(self.font_families) * len(self.font_sizes) * len(self.font_styles) * len(self.font_colors) * len(self.background_colors) * len(self.layouts) * len(self.content_types) + (len(self.background_colors) * len(self.layouts))
@@ -115,6 +119,8 @@ class Generator(object):
                                             for background_color in self.background_colors:
                                                 for layout in self.layouts:
                                                     for content_type in self.content_types:
+                                                        if too_similar(font_color, background_color, self.min_delta_e):
+                                                            continue
                                                         bar.update(curr_it)
                                                         curr_it += 1
                                                         # Generate path
@@ -615,6 +621,38 @@ def str_to_span(content: str):
 def normalize_path(path: str):
     return path.replace('(', '_').replace(')', '').replace(',', '').replace(' ', '_')
 
+def too_similar(font_color: str, background_color: str, min_delta_e: float) -> bool:
+    reg = r"(\d+)"
+    body_background = [255,255,255]
+
+    b_rgba: [int] = [int(e) for e in re.findall(reg, background_color)]
+    b_rgb = alpha_blend(b_rgba, body_background)
+    b_srgb = sRGBColor(b_rgb[0], b_rgb[1], b_rgb[2])
+    b_xyz = convert_color(b_srgb, XYZColor, is_upscaled=True)
+    b_lab = convert_color(b_xyz, LabColor)
+
+    f_rgba: [int] = [int(e) for e in re.findall(reg, font_color)]
+    f_rgb = alpha_blend(f_rgba, b_rgb)
+    f_srgb = sRGBColor(f_rgb[0], f_rgb[1], f_rgb[2])
+    f_xyz = convert_color(f_srgb, XYZColor, is_upscaled=True)
+    f_lab = convert_color(f_xyz, LabColor)
+
+    delta_e: float = delta_e_cie1976(f_lab, b_lab)
+
+    return bool(delta_e <= min_delta_e)
+
+def alpha_blend(front_color: [int], background_color: [int]):
+    out: [int] = []
+    if len(front_color) > 3:
+        alpha: float = front_color[3]
+
+        out.append(alpha * front_color[0] + (1 - alpha) * background_color[0])
+        out.append(alpha * front_color[1] + (1 - alpha) * background_color[1])
+        out.append(alpha * front_color[2] + (1 - alpha) * background_color[2])
+    else:
+        out = front_color
+
+    return out
 
 if __name__ == '__main__':
     main()
