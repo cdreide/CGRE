@@ -77,7 +77,7 @@ class Generator(object):
         self.font_sizes: [str] = crawl_data['font_size_dict']
         self.font_styles: [str] = crawl_data['font_style_dict']
         self.font_weights: [str] = crawl_data['font_weight_dict']
-        self.text_decorations: [str] = crawl_data['text_decoration_dict']
+        self.text_decoration_lines: [str] = crawl_data['text_decoration_line_dict']
         self.font_colors: [str] = crawl_data['font_color_dict']
         self.background_colors: [str] = crawl_data['background_color_dict']
         self.layouts = [e for e in Layout]
@@ -91,7 +91,7 @@ class Generator(object):
         self.min_delta_e: float = 5.
 
     def generate_html(self):
-        iterations = (len(self.other_types)-1) * len(self.font_families) * len(self.font_sizes) * len(self.font_styles) * len(self.font_colors) * len(self.background_colors) * len(self.layouts) * len(self.content_types) + (len(self.background_colors) * len(self.layouts))
+        iterations = (len(self.other_types)-1) * len(self.font_families) * len(self.font_sizes) * len(self.font_styles) * len(self.font_weights) * len(self.text_decoration_lines) * len(self.font_colors) * len(self.background_colors) * len(self.layouts) * len(self.content_types) + (len(self.background_colors) * len(self.layouts))
         curr_it = 0
         with progressbar.ProgressBar(max_value=iterations) as bar:
             for other_type in self.other_types:
@@ -114,17 +114,17 @@ class Generator(object):
                         for font_size in self.font_sizes:
                             for font_style in self.font_styles:
                                 for font_weight in self.font_weights:
-                                    for text_decoration in self.text_decorations:
+                                    for text_decoration_line in self.text_decoration_lines:
                                         for font_color in self.font_colors:
                                             for background_color in self.background_colors:
                                                 for layout in self.layouts:
                                                     for content_type in self.content_types:
-                                                        if too_similar(font_color, background_color, self.min_delta_e):
-                                                            continue
                                                         bar.update(curr_it)
                                                         curr_it += 1
+                                                        if too_similar(font_color, background_color, self.min_delta_e):
+                                                            continue
                                                         # Generate path
-                                                        file_path_tmp: str = other_type + '/' + font_family + '/' + font_size + '/' + font_style + '/' + font_color + '/' + '/' + background_color + '/' + layout.name + '/' + content_type
+                                                        file_path_tmp: str = other_type + '/' + font_family + '/' + font_size + '/' + font_style + '/' + font_weight + '/' + text_decoration_line + '/' + font_color + '/' + '/' + background_color + '/' + layout.name + '/' + content_type
                                                         file_path: Path = Path(normalize_path(file_path_tmp))
                                                         self.prepare(
                                                             file_path=file_path,
@@ -133,7 +133,7 @@ class Generator(object):
                                                             font_size=font_size,
                                                             font_style=font_style,
                                                             font_weight=font_weight,
-                                                            text_decoration=text_decoration,
+                                                            text_decoration_line=text_decoration_line,
                                                             font_color=font_color,
                                                             background_color=background_color,
                                                             layout=layout,
@@ -148,7 +148,7 @@ class Generator(object):
         font_size: str='',
         font_style: str='',
         font_weight: str='',
-        text_decoration: str='',
+        text_decoration_line: str='',
         font_color: str='',
         background_color: str='',
         layout: Layout=Layout.center,
@@ -160,7 +160,7 @@ class Generator(object):
         if len(font_size) > 0: style += 'font-size: ' + font_size + '; '
         if len(font_style) > 0: style += 'font-style: ' + font_style + '; '
         if len(font_weight) > 0: style += 'font-weight: ' + font_weight + '; '
-        if len(text_decoration) > 0: style += 'text-decoration: ' + text_decoration + '; '
+        if len(text_decoration_line) > 0: style += 'text-decoration-line: ' + text_decoration_line + '; '
         if len(font_color) > 0: style += 'color: ' + font_color + '; '
         if len(background_color) > 0: style += 'background: ' + background_color + '; '
 
