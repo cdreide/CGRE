@@ -17,16 +17,16 @@ echo '### Recognition ###'
 ## Localisation
 echo '## Localisation'
 cd ../../recognition/localisation/
-./build/tesseract_localiser /data/results/dataset /data/results/dataset_tesseract_localised
+./build/localiser /data/results/dataset /data/results/dataset_tesseract_localised
 
 ## Determination on ideal
 echo '## Determination on ideal'
 cd ../determination/
-./build/tesseract_determiner /data/results/dataset /data/results/dataset /data/results/dataset_tesseract_determiner
+./build/determiner /data/results/dataset /data/results/dataset /data/results/dataset_tesseract_determiner
 
 ## Determination on localised (complete)
 echo '## Determination on localised (complete)'
-./build/tesseract_determiner /data/results/dataset /data/results/dataset_tesseract_localised /data/results/dataset_tesseract_complete
+./build/determiner /data/results/dataset /data/results/dataset_tesseract_localised /data/results/dataset_tesseract_complete
 
 ## Evaluation
 echo '## Evaluation'

@@ -6,6 +6,8 @@
 #include <filesystem>
 #include <vector>
 #include <regex>
+#include <chrono>
+
 namespace fs = std::filesystem;
 
 int main (int argc, char *argv[]) {
@@ -45,11 +47,11 @@ int main (int argc, char *argv[]) {
     // OCR per image and corresponding boxes
     for (const auto & imgPath : imgs) {
         if (prints) std::cout << "Loading (png): " << imgPath << std::endl;
-
         // Get coordinates path
         auto extIndex  = imgPath.find(".png");
 
         // Read Image
+        std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
         Pix *image = pixRead(imgPath.c_str());
         api->SetImage(image);
 
@@ -70,6 +72,10 @@ int main (int argc, char *argv[]) {
                 outLines.push_back(outLine);
             }
         }
+        pixDestroy(&image);
+
+        std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+        std::string time = "% Time (in microseconds):  " + std::to_string(std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count());
 
         // Write found words in file
         auto endOfPath = imgPath;
@@ -82,11 +88,9 @@ int main (int argc, char *argv[]) {
         fs::create_directories(fs::path(outPath).parent_path());
         std::ofstream outFile(outPath);
         std::ostream_iterator<std::string> output_iterator(outFile);
+        outFile << time << "\n";
         for (const auto & line : outLines) outFile << line << "\n";
-
-        pixDestroy(&image);
     }
-
 
     // Destroy used object and release memory
     api->End();
