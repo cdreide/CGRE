@@ -16,24 +16,24 @@ echo '### Recognition ###'
 
 ## Localisation
 echo '## Localisation'
-cd ../../recognition/localisation/tesseract_localiser
+cd ../../recognition/localisation/
 ./setup.sh
 ./build/tesseract_localiser ../../../results/dataset ../../../results/dataset_tesseract_localised
 
 ## Determination on ideal
 echo '## Determination on ideal'
-cd ../../determination/tesseract_determiner
+cd ../determination/
 ./setup.sh
-./build/tesseract_determiner ../../../results/dataset ../../../results/dataset ../../../results/dataset_tesseract_determiner
+./build/tesseract_determiner ../../results/dataset ../../results/dataset ../../results/dataset_tesseract_determiner
 
 ## Determination on localised (complete)
 echo '## Determination on localised (complete)'
-./build/tesseract_determiner ../../../results/dataset ../../../results/dataset_tesseract_localised ../../../results/dataset_tesseract_complete
+./build/tesseract_determiner ../../results/dataset ../../results/dataset_tesseract_localised ../../results/dataset_tesseract_complete
 
 ## Evaluation
 echo '## Evaluation'
-cd ../../../evaluation
+cd ../../evaluation
 echo '# Determination'
-pipenv run python evaluation.py ../results/dataset ../results/dataset_tesseract_determiner/ -cp 0.5 -lt 2 -o ../results/evaluation_determiner
+pipenv run python evaluation.py ../results/dataset ../results/dataset_tesseract_determiner/ -cp 0.9 -lt 2 -o ../results/evaluation_determiner
 echo '# Localised (complete)'
-pipenv run python evaluation.py ../results/dataset ../results/dataset_tesseract_complete/ -cp 0.5 -lt 2 -o ../results/evaluation_complete
+pipenv run python evaluation.py ../results/dataset ../results/dataset_tesseract_complete/ -cp 0.9 -lt 2 -o ../results/evaluation_complete

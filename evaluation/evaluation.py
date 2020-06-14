@@ -326,10 +326,23 @@ def validate_coordinate(ideal_line: Line, recognized_line: Line, coordinate_thre
                 abs(int(recognized_line['height']) - int(ideal_line['height']) <= coordinate_threshold)
             )
     else:
+
+
+        ideal_x_min: int = int(ideal_line['left'])
+        ideal_y_min: int = int(ideal_line['top'])
+        ideal_x_max: int = int(ideal_line['left']) + int(ideal_line['width'])
+        ideal_y_max: int = int(ideal_line['top']) + int(ideal_line['height'])
+        recognized_x_min: int = int(recognized_line['left'])
+        recognized_y_min: int = int(recognized_line['top'])
+        recognized_x_max: int = int(recognized_line['left']) + int(recognized_line['width'])
+        recognized_y_max: int = int(recognized_line['top']) + int(recognized_line['height'])
+
+
+
         ideal_area: float = int(ideal_line['width']) * int(ideal_line['height'])
         common_area: int = 0
-        dx = min(int(ideal_line['width']), int(recognized_line['width'])) - max(int(ideal_line['left']), int(recognized_line['left']))
-        dy = min(int(ideal_line['height']), int(recognized_line['height'])) - max(int(ideal_line['top']), int(recognized_line['top']))
+        dx = min(ideal_x_max, recognized_x_max) - max(ideal_x_min, recognized_x_min)
+        dy = min(ideal_y_max, recognized_y_max) - max(ideal_y_min, recognized_y_min)
         if (dx >= 0) and (dy >= 0):
             common_area = dx * dy
         if (float(common_area) / float(ideal_area)) >= coordinate_percent:

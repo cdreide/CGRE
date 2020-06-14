@@ -16,12 +16,12 @@ echo '### Recognition ###'
 
 ## Localisation
 echo '## Localisation'
-cd ../../recognition/localisation/tesseract_localiser
+cd ../../recognition/localisation/
 ./build/tesseract_localiser /data/results/dataset /data/results/dataset_tesseract_localised
 
 ## Determination on ideal
 echo '## Determination on ideal'
-cd ../../determination/tesseract_determiner
+cd ../determination/
 ./build/tesseract_determiner /data/results/dataset /data/results/dataset /data/results/dataset_tesseract_determiner
 
 ## Determination on localised (complete)
@@ -30,8 +30,8 @@ echo '## Determination on localised (complete)'
 
 ## Evaluation
 echo '## Evaluation'
-cd ../../../evaluation
+cd ../../evaluation
 echo '# Determination'
-python evaluation.py /data/results/dataset /data/results/dataset_tesseract_determiner/ -cp 0.5 -lt 2 -o /data/results/evaluation_determiner
+python evaluation.py /data/results/dataset /data/results/dataset_tesseract_determiner/ -cp 0.9 -lt 2 -o /data/results/evaluation_determiner
 echo '# Localised (complete)'
-python evaluation.py /data/results/dataset /data/results/dataset_tesseract_complete/ -cp 0.5 -lt 2 -o /data/results/evaluation_complete
+python evaluation.py /data/results/dataset /data/results/dataset_tesseract_complete/ -cp 0.9 -lt 2 -o /data/results/evaluation_complete
