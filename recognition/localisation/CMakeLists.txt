@@ -5,12 +5,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 
-project( tesseract_localiser )
+project( localiser )
 
 find_package( OpenCV REQUIRED )
 
 include_directories( ${OpenCV_INCLUDE_DIRS} )
 
-add_executable( tesseract_localiser tesseract_localiser.cpp )
+add_executable( localiser localiser.cpp )
 
-target_link_libraries( tesseract_localiser ${OpenCV_LIBS} tesseract lept)
+target_link_libraries( localiser ${OpenCV_LIBS} tesseract lept)

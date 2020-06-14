@@ -9,7 +9,7 @@ echo '### Creation ###'
 cd ./dataset/creation
 echo '# Generating'
 pipenv run python main.py -i ../styleCrawling/resources/urls_us -o ../../results -t 3 -b -v
- -b -v -z
+-b -v -z
 
 ### Recognition ###
 echo '### Recognition ###'

@@ -5,12 +5,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 
-project( tesseract_determiner )
+project( determiner )
 
 find_package( OpenCV REQUIRED )
 
 include_directories( ${OpenCV_INCLUDE_DIRS} )
 
-add_executable( tesseract_determiner tesseract_determiner.cpp )
+add_executable( determiner determiner.cpp )
 
-target_link_libraries( tesseract_determiner ${OpenCV_LIBS} tesseract lept)
+target_link_libraries( determiner ${OpenCV_LIBS} tesseract lept)
