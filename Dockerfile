@@ -78,8 +78,8 @@ ENV TESSDATA_PREFIX /usr/share/tessdata/
 
 # Compile C++ Code
 COPY recognition /app/recognition
-RUN cd /app/recognition/determination/tesseract_determiner && ./setup.sh && \
-    cd /app/recognition/localisation/tesseract_localiser && ./setup.sh
+RUN cd /app/recognition/determination/determiner && ./setup.sh && \
+    cd /app/recognition/localisation/localiser && ./setup.sh
 
 # Remove unneeded
 RUN apt-get purge -y curl \
