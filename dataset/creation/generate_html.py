@@ -11,7 +11,7 @@ import codecs
 import json
 import random
 import shutil
-from colormath.color_diff import delta_e_cie1976
+from colormath.color_diff import delta_e_cie2000
 from colormath.color_conversions import convert_color
 from colormath.color_objects import XYZColor, sRGBColor, LabColor
 
@@ -637,7 +637,7 @@ def too_similar(font_color: str, background_color: str, min_delta_e: float) -> b
     f_xyz = convert_color(f_srgb, XYZColor, is_upscaled=True)
     f_lab = convert_color(f_xyz, LabColor)
 
-    delta_e: float = delta_e_cie1976(f_lab, b_lab)
+    delta_e: float = delta_e_cie2000(f_lab, b_lab)
 
     return bool(delta_e <= min_delta_e)
 
