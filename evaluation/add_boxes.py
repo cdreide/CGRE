@@ -50,7 +50,10 @@ def add_boxes(in_imgs: str, in_txts: str, out: str):
                 if 'file://' in l:
                     continue
                 coordinate_tuple: [int] = []
-                coordinates = re.search(r'([0-9]+),([0-9]+),([0-9]+),([0-9]+)', l).groups()
+                try:
+                    coordinates = re.search(r'([0-9]+),([0-9]+),([0-9]+),([0-9]+)', l).groups()
+                except:
+                    continue
                 for coordinate in coordinates:
                     coordinate_tuple.append(int(float(coordinate)))
                 all_coordinates.append(tuple(coordinate_tuple))
