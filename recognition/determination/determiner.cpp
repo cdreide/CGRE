@@ -82,7 +82,7 @@ int main (int argc, char *argv[]) {
             Pix *image = pixRead(imgPath.c_str());
             api->SetImage(image);
 
-            for (int i = 0; i < coordinates.size() - 4; i += 4) {
+            for (int i = 0; i <= coordinates.size() - 4; i += 4) {
                 int left = coordinates[i];
                 int top = coordinates[i+1];
                 int width = coordinates[i+2];

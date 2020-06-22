@@ -65,7 +65,6 @@ COPY Pipfile Pipfile.lock /app/
 WORKDIR /app
 RUN pipenv install --deploy --ignore-pipfile
 
-
 # Download Chromium for cefpython
 RUN pipenv run python -c 'import pyppeteer; pyppeteer.chromium_downloader.download_chromium()'
 
@@ -97,7 +96,6 @@ RUN apt-get purge -y curl \
 COPY complete_pipeline_docker.sh /app/complete_pipeline_docker.sh
 COPY dataset /app/dataset
 COPY evaluation /app/evaluation
-
 
 ENV DISPLAY :99
 ADD docker_start.sh /docker_start.sh
