@@ -55,18 +55,14 @@ def evaluate(ideal_path, recognized_path, outpath, coordinate_percent, levenshte
     for path in Path(ideal_path).rglob('*.txt'):
         ideal_files.append(path.absolute())
 
-    first_ideal: bool = True
-    first_recognized: bool = True
-
     # Values
     overall_TP_l: int = 0    # True Positives   (ideal coordinate in recognized coordinates)
     overall_FP_l: int = 0    # False Positives  (recognized coordinate not in ideal coordinates)
     overall_FN_l: int = 0    # False Negatives  (ideal coordinate not in recognized coordinates)
-    overall_TP_d: int = 0    # True Positives   (ideal word in recognized words [in same coordinates])
-    overall_FP_d: int = 0    # False Positives  (recognized word not in ideal words)
-    overall_FN_d: int = 0    # False Negatives  (ideal word not in recognized words [in same coordinates])
+    overall_T_d: int = 0    # Word was recognized
+    overall_F_d: int = 0    # Word was not recognized
 
-    file_results: [Result] = [{'path': '', 'tp_l': '', 'fp_l': '', 'fn_l': '', 'tp_d': '', 'fp_d': '', 'fn_d': '', 'time_l': '', 'time_d': '', 'time_c': ''}] 
+    file_results: [Result] = [{'path': '', 'tp_l': '', 'fp_l': '', 'fn_l': '', 't_d': '', 'f_d': '', 'time_l': '', 'time_d': '', 'time_c': ''}] 
 
     # EVALUATE THE FILES
     for i in progressbar.progressbar(range(len(ideal_files))):
@@ -90,8 +86,6 @@ def evaluate(ideal_path, recognized_path, outpath, coordinate_percent, levenshte
                     time_l += get_time(line)
                 else:
                     ideal.append(get_word_coordinate_dict(line))
-                    if first_ideal:
-                        first_ideal = False
         with open(recognized_file_path, 'r') as f:
             # print('load:\t' + recognized_file_path)
             for line in f:
@@ -101,8 +95,6 @@ def evaluate(ideal_path, recognized_path, outpath, coordinate_percent, levenshte
                     time_d += get_time(line)
                 else:
                     recognized.append(get_word_coordinate_dict(line))
-                    if first_recognized:
-                        first_recognized = False
 
         del ideal[0]
         del recognized[0]
@@ -113,12 +105,14 @@ def evaluate(ideal_path, recognized_path, outpath, coordinate_percent, levenshte
         TP_l: int = 0    # True Positives   (ideal coordinate in recognized coordinates)
         FP_l: int = 0    # False Positives  (recognized coordinate not in ideal coordinates)
         FN_l: int = 0    # False Negatives  (ideal coordinate not in recognized coordinates)
+        determination_pairs: [(Line, str)] = []
         recognized_copy = recognized.copy()
         for ideal_line in ideal:
             found: bool = False
             for i in range(len(recognized_copy)):
                 if validate_coordinate(ideal_line, recognized_copy[i], coordinate_percent):
                     found = True
+                    determination_pairs.append((recognized_copy[i]['word'], ideal_line['word']))
                     del recognized_copy[i]
                     break
             if found:
@@ -128,12 +122,6 @@ def evaluate(ideal_path, recognized_path, outpath, coordinate_percent, levenshte
             found = False
         FP_l = len(recognized) - TP_l # FP = Pr - TP (Pr are the overall localized)
 
-        # print('\nideal_len: ' + str(len(ideal)))
-        # print('\nideal: ' + str(ideal))
-        # print('recognized_len: ' + str(len(recognized)))
-        # print('recognized: ' + str(recognized))
-        # print('TP_l: ' + str(TP_l))
-        # print('FP_l: ' + str(FP_l))
 
         # save the values
         file_result['tp_l'] = str(TP_l)
@@ -144,37 +132,21 @@ def evaluate(ideal_path, recognized_path, outpath, coordinate_percent, levenshte
         overall_FN_l += FN_l
 
         # DETERMINATION
-        # maybe change localisation in a way that we only have the lines where the coordinates are correct
-        # not good because if word is recognized correctly but coordinates too off? (Can this happen?)
-        # how to handle ''\t(12,213,34,54) cases? Will they appear? Maybe add new count? they are in FP_d right now
-        TP_d: int = 0    # True Positives   (ideal word in recognized words [in same coordinates])
-        FP_d: int = 0    # False Positives  (recognized word not in ideal words)
-        FN_d: int = 0    # False Negatives  (ideal word not in recognized words [in same coordinates])
-        recognized_copy = recognized.copy()
-        for ideal_line in ideal:
-            found: bool = False
-            for i in range(len(recognized_copy)):
-                if validate_word(ideal_line, recognized_copy[i], coordinate_percent, levenshtein_percent):
-                    found = True
-                    del recognized_copy[i]
-                    break
-            if found:
-                TP_d += 1
-            else:
-                FN_d += 1
-            found = False
-        FP_d = len(recognized) - TP_d # FP = Pr - TP (Pr are the overall determined)
+        T_d: int = 0    # Word was recognized
+        F_d: int = 0    # Word was not recognized
+        for ideal_word, recognized_word in determination_pairs:
+            if validate_word(ideal_word, recognized_word, levenshtein_percent):
+                T_d += 1
+        F_d = len(determination_pairs) - T_d 
 
         # save the values
-        file_result['tp_d'] = str(TP_d)
-        file_result['fp_d'] = str(FP_d)
-        file_result['fn_d'] = str(FN_d)
+        file_result['t_d'] = str(T_d)
+        file_result['f_d'] = str(F_d)
         file_result['time_l'] = str(time_l)
         file_result['time_d'] = str(time_d)
         file_result['time_c'] = str(time_l + time_d)
-        overall_TP_d += TP_d
-        overall_FP_d += FP_d
-        overall_FN_d += FN_d
+        overall_T_d += T_d
+        overall_F_d += F_d
 
         file_results.append(file_result)
 
@@ -206,24 +178,9 @@ def evaluate(ideal_path, recognized_path, outpath, coordinate_percent, levenshte
         pass
 
     # DETERMINATION
-    accuracy_d: float = -1.0
     precision_d: float = -1.0
-    recall_d: float = -1.0
-    fone_score_d: float = -1.0
     try:
-        accuracy_d = (overall_TP_d) / (overall_TP_d + overall_FP_d + overall_FN_d)
-    except:
-        pass
-    try:
-        precision_d = (overall_TP_d) / (overall_TP_d + overall_FP_d)
-    except:
-        pass
-    try:
-        recall_d = (overall_TP_d) / (overall_TP_d + overall_FN_d)
-    except:
-        pass
-    try:
-        fone_score_d =  2 * (precision_d * recall_d) / (precision_d + recall_d)
+        precision_d = (overall_T_d) / (overall_T_d + overall_F_d)
     except:
         pass
 
@@ -252,13 +209,9 @@ def evaluate(ideal_path, recognized_path, outpath, coordinate_percent, levenshte
     # Determination Results
     log += '\n'
     log += 'DETERMINATION:' + '\n'
-    log += 'TP_d:\t\t' + str(overall_TP_d) + '\n'
-    log += 'FP_d:\t\t' + str(overall_FP_d) + '\n'
-    log += 'FN_d:\t\t' + str(overall_FN_d) + '\n'
-    log += '(' + 'accuracy_d:\t' + str(accuracy_d) + ')' + '\n'
+    log += 'T_d:\t\t' + str(overall_T_d) + '\n'
+    log += 'F_d:\t\t' + str(overall_F_d) + '\n'
     log += 'precision_d:\t' + str(precision_d) + '\n'
-    log += 'recall_d:\t' + str(recall_d) + '\n'
-    log += 'fone_score_d:\t' + str(fone_score_d) + '\n'
 
     print('\n' + log)
 
@@ -330,42 +283,14 @@ def validate_coordinate(ideal_line: Line, recognized_line: Line, coordinate_perc
     dy = min(ideal_y_max, recognized_y_max) - max(ideal_y_min, recognized_y_min)
     if (dx >= 0) and (dy >= 0):
         common_area = dx * dy
-    if (float(common_area) / float(ideal_area)) >= coordinate_percent:
+    if (float(common_area) / ideal_area) >= coordinate_percent:
         valid_box = True
 
     return valid_box
 
-def validate_word(ideal_line: Line, recognized_line: Line, coordinate_percent: float, levenshtein_percent: int) -> bool:
-    valid_input: bool = (
-            ideal_line['left'] and
-            ideal_line['top'] and
-            ideal_line['width'] and
-            ideal_line['height'] and
-            ideal_line['word'] != '' and
-            recognized_line['word'] != '' and
-            recognized_line['left'] != '' and
-            recognized_line['top'] != '' and
-            recognized_line['width'] != '' and
-            recognized_line['height'] != ''
-        )
+def validate_word(ideal_word: str, recognized_word: str, levenshtein_percent: int) -> bool:
 
-    if not valid_input:
-        return False
-
-    valid_box: bool = False
-
-    ideal_area: float = int(ideal_line['width']) * int(ideal_line['height'])
-    common_area: int = 0
-    dx = min(int(ideal_line['width']), int(recognized_line['width'])) - max(int(ideal_line['left']), int(recognized_line['left']))
-    dy = min(int(ideal_line['height']), int(recognized_line['height'])) - max(int(ideal_line['top']), int(recognized_line['top']))
-    if (dx >= 0) and (dy >= 0):
-        common_area = dx * dy
-    if (float(common_area) / ideal_area) >= coordinate_percent:
-        valid_box = True
-
-    valid_levenshtein: bool = levenshtein.ratio(recognized_line['word'], ideal_line['word']) < levenshtein_percent
-
-    return valid_box and valid_levenshtein
+    return levenshtein.ratio(ideal_word, recognized_word) < levenshtein_percent
 
 def normalize_word(word: str) -> str:
     alphanumeric: str = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'

@@ -8,7 +8,7 @@ from dataset.styleCrawling.crawler import crawl
 from dataset.creation.generate_html import generate_html
 from dataset.creation.render_html import render_html
 from evaluation.add_boxes import add_boxes
-from dataset.styleCrawling.visualise import visualise
+from evaluation.visualise import visualise_crawl
 from dataset.creation.zip_dataset import create_zip
 
 def main() -> None:
@@ -97,7 +97,7 @@ def main() -> None:
     if options.visualise:
         print('Visualising Crawl Data...')
         visualise_results: Path = out_path.joinpath('visualise')
-        visualise(crawl_results, visualise_results)
+        visualise_crawl(crawl_results, visualise_results)
 
     if options.create_zip:
         print('Zipping Dataset...')

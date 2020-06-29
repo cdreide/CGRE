@@ -77,9 +77,8 @@ def visualise_evaluation(in_path, out_path):
         tp_l_complete: int = 0
         fp_l_complete: int = 0
         fn_l_complete: int = 0
-        tp_d_complete: int = 0
-        fp_d_complete: int = 0
-        fn_d_complete: int = 0
+        t_d_complete: int = 0
+        f_d_complete: int = 0
         time_l_complete: int = 0
         time_d_complete: int = 0
         time_c_complete: int = 0
@@ -92,12 +91,11 @@ def visualise_evaluation(in_path, out_path):
                     tp_l_complete += int(l[1])
                     fp_l_complete += int(l[2])
                     fn_l_complete += int(l[3])
-                    tp_d_complete += int(l[4])
-                    fp_d_complete += int(l[5])
-                    fn_d_complete += int(l[6])
-                    time_l_complete += int(l[7])
-                    time_d_complete += int(l[8])
-                    time_c_complete += int(l[9])
+                    t_d_complete += int(l[4])
+                    f_d_complete += int(l[5])
+                    time_l_complete += int(l[6])
+                    time_d_complete += int(l[7])
+                    time_c_complete += int(l[8])
                     entries += 1
 
         # LOCALISATION
@@ -123,29 +121,13 @@ def visualise_evaluation(in_path, out_path):
             pass
 
         # DETERMINATION
-        accuracy_d: float = -1.0
         precision_d: float = -1.0
-        recall_d: float = -1.0
-        fone_score_d: float = -1.0
         try:
-            accuracy_d = (tp_d_complete) / (tp_d_complete + fp_d_complete + fn_d_complete)
-        except:
-            pass
-        try:
-            precision_d = (tp_d_complete) / (tp_d_complete + fp_d_complete)
-        except:
-            pass
-        try:
-            recall_d = (tp_d_complete) / (tp_d_complete + fn_d_complete)
-        except:
-            pass
-        try:
-            fone_score_d =  2 * (precision_d * recall_d) / (precision_d + recall_d)
+            precision_d = (t_d_complete) / (t_d_complete + f_d_complete)
         except:
             pass
 
-        results.append({'cp': cp, 'lp': lp, 'accuracy_l': accuracy_l, 'precision_l': precision_l, 'recall_l': recall_l, 'fone_score_l': fone_score_l, 'accuracy_d': accuracy_d, 'precision_d': precision_d, 'recall_d': recall_d, 'fone_score_d': fone_score_d })
-
+        results.append({'cp': cp, 'lp': lp, 'accuracy_l': accuracy_l, 'precision_l': precision_l, 'recall_l': recall_l, 'fone_score_l': fone_score_l, 'precision_d': precision_d })
 
 
     cps: [str] = sorted(list(set([r['cp'] for r in results])))
@@ -156,23 +138,16 @@ def visualise_evaluation(in_path, out_path):
     recall_ls = np.zeros((len(cps),len(lps)))
     fone_score_ls = np.zeros((len(cps),len(lps)))
     # Determination
-    accuracy_ds = np.zeros((len(cps),len(lps)))
     precision_ds = np.zeros((len(cps),len(lps)))
-    recall_ds = np.zeros((len(cps),len(lps)))
-    fone_score_ds = np.zeros((len(cps),len(lps)))
     for i, cp in enumerate(cps):
         for j, lp in enumerate(lps):
-            accuracy_d = -1.
             for d in results:
                 if d['cp'] == cp and d['lp'] == lp:
                     accuracy_ls[i, j] = d['accuracy_l'] * 100
                     precision_ls[i, j] = d['precision_l'] * 100
                     recall_ls[i, j] = d['recall_l'] * 100
                     fone_score_ls[i, j] = d['fone_score_l'] * 100
-                    accuracy_ds[i, j] = d['accuracy_d'] * 100
                     precision_ds[i, j] = d['precision_d'] * 100
-                    recall_ds[i, j] = d['recall_d'] * 100
-                    fone_score_ds[i, j] = d['fone_score_d'] * 100
                     break
 
     # show_hm(accuracy_ls, 'accuracy_ls', cps, lps)
@@ -188,10 +163,7 @@ def visualise_evaluation(in_path, out_path):
     save_hm(precision_ls, 'precision_ls', cps, lps, out_path)
     save_hm(recall_ls, 'recall_ls', cps, lps, out_path)
     save_hm(fone_score_ls, 'fone_score_ls', cps, lps, out_path)
-    save_hm(accuracy_ds, 'accuracy_ds', cps, lps, out_path)
     save_hm(precision_ds, 'precision_ds', cps, lps, out_path)
-    save_hm(recall_ds, 'recall_ds', cps, lps, out_path)
-    save_hm(fone_score_ds, 'fone_score_ds', cps, lps, out_path)
 
     # Correlation Matrix Heatmap
     if False:

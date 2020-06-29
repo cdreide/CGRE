@@ -38,6 +38,6 @@ cd ../../evaluation
 # pipenv run python evaluation.py ../results/dataset ../results/dataset_tesseract_complete/ -cp 0.6 -lp 0.7 -o ../results/evaluation_complete
 
 echo '# Determination'
-pipenv run python evaluate_combinations.py ../results/dataset ../results/dataset_tesseract_determiner/ -o ../results/evaluation_determiner
+# pipenv run python evaluate_combinations.py ../results/dataset ../results/dataset_tesseract_determiner/ -o ../results/evaluation_determiner
 echo '# Localised (complete)'
 pipenv run python evaluate_combinations.py ../results/dataset ../results/dataset_tesseract_complete/ -o ../results/evaluation_complete
