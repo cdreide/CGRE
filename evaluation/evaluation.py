@@ -99,7 +99,7 @@ def evaluate(ideal_path, recognized_path, outpath, coordinate_percent, levenshte
         del ideal[0]
         del recognized[0]
         # EVALUATE THE DATA
-        file_result: Result = {'path': recognized_file_path, 'tp_l': '', 'fp_l': '', 'fn_l': '', 'tp_d': '', 'fp_d': '', 'fn_d': ''} 
+        file_result: Result = {'path': recognized_file_path, 'tp_l': '', 'fp_l': '', 'fn_l': '', 't_d': '', 'f_d': ''} 
 
         # LOCALISATION
         TP_l: int = 0    # True Positives   (ideal coordinate in recognized coordinates)
