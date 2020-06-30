@@ -184,7 +184,6 @@ def visualise_evaluation(in_path, out_path):
         for r in results:
             print(r)
 
-
 def show_hm(values, label, cps, lps):
     fig, ax = plt.subplots()
 

@@ -283,14 +283,14 @@ def validate_coordinate(ideal_line: Line, recognized_line: Line, coordinate_perc
     dy = min(ideal_y_max, recognized_y_max) - max(ideal_y_min, recognized_y_min)
     if (dx >= 0) and (dy >= 0):
         common_area = dx * dy
-    if (float(common_area) / ideal_area) >= coordinate_percent:
-        valid_box = True
+        if (float(common_area) / ideal_area) >= coordinate_percent:
+            valid_box = True
 
     return valid_box
 
 def validate_word(ideal_word: str, recognized_word: str, levenshtein_percent: int) -> bool:
 
-    return levenshtein.ratio(ideal_word, recognized_word) < levenshtein_percent
+    return levenshtein.ratio(ideal_word, recognized_word) >= levenshtein_percent
 
 def normalize_word(word: str) -> str:
     alphanumeric: str = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
