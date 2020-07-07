@@ -6,6 +6,15 @@ import matplotlib
 import json
 import re
 import csv
+from matplotlib import rcParams
+rcParams['font.family'] = 'serif'
+rcParams['font.sans-serif'] = ['Palatino']
+rcParams['font.serif'] = ['Palatino']
+rcParams["font.size"] = "6"
+rcParams['text.usetex'] ='false'
+rcParams["font.weight"] = "normal" # does not work :/
+rcParams["axes.labelweight"] = "normal" # does not work :/
+rcParams['figure.dpi'] = "200" 
 
 def main():
     parser = OptionParser()
@@ -68,7 +77,7 @@ def visualise_evaluation(in_path, out_path):
     results: [{str: str}] = []
     cp_reg = r'cp(\d+)'
     lp_reg = r'lp(\d+)'
-    for path in Path(in_path).rglob('*.csv'):
+    for path in sorted(Path(in_path).rglob('*.csv')):
         cp: str = re.search(cp_reg, path.name).groups()[0]
         cp = cp[:1] + '.' + cp[1:]
         lp: str = re.search(lp_reg, path.name).groups()[0]
@@ -127,7 +136,7 @@ def visualise_evaluation(in_path, out_path):
         except:
             pass
 
-        results.append({'cp': cp, 'lp': lp, 'accuracy_l': accuracy_l, 'precision_l': precision_l, 'recall_l': recall_l, 'fone_score_l': fone_score_l, 'precision_d': precision_d })
+        results.append({'cp': cp, 'lp': lp, 'accuracy_l': accuracy_l, 'precision_l': precision_l, 'recall_l': recall_l, 'fone_score_l': fone_score_l, 'precision_d': precision_d, 'time_l_complete': time_l_complete, 'time_d_complete': time_d_complete, 'entries': entries})
 
 
     cps: [str] = sorted(list(set([r['cp'] for r in results])))
@@ -137,6 +146,30 @@ def visualise_evaluation(in_path, out_path):
     precision_ls = np.zeros((len(cps),len(lps)))
     recall_ls = np.zeros((len(cps),len(lps)))
     fone_score_ls = np.zeros((len(cps),len(lps)))
+
+    accuracy_ll = np.zeros(len(cps))
+    precision_ll = np.zeros(len(cps))
+    recall_ll = np.zeros(len(cps))
+    fone_score_ll = np.zeros(len(cps))
+
+    time_l_complete = 0
+    time_d_complete = 0
+    entries_complete = 0
+
+    for r in results:
+        time_l_complete += r['time_l_complete']
+        time_d_complete += r['time_d_complete']
+        entries_complete += r['entries']
+    time_c_complete = time_l_complete + time_d_complete
+
+    mean_time_l = (time_l_complete / entries_complete) / 1000 / 1000
+    mean_time_d = (time_d_complete / entries_complete) / 1000 / 1000
+    mean_time_c = (time_c_complete / entries_complete) / 1000 / 1000
+
+    print('mean_time_l (in s): ' + str(mean_time_l))
+    print('mean_time_d (in s): ' + str(mean_time_d))
+    print('mean_time_c (in s): ' + str(mean_time_c))
+
     # Determination
     precision_ds = np.zeros((len(cps),len(lps)))
     for i, cp in enumerate(cps):
@@ -148,41 +181,41 @@ def visualise_evaluation(in_path, out_path):
                     recall_ls[i, j] = d['recall_l'] * 100
                     fone_score_ls[i, j] = d['fone_score_l'] * 100
                     precision_ds[i, j] = d['precision_d'] * 100
+
+                    accuracy_ll[i] = d['accuracy_l'] * 100
+                    precision_ll[i] = d['precision_l'] * 100
+                    recall_ll[i] = d['recall_l'] * 100
+                    fone_score_ll[i] = d['fone_score_l'] * 100
                     break
 
-    # show_hm(accuracy_ls, 'accuracy_ls', cps, lps)
-    # show_hm(precision_ls, 'precision_ls', cps, lps)
-    # show_hm(recall_ls, 'recall_ls', cps, lps)
-    # show_hm(fone_score_ls, 'fone_score_ls', cps, lps)
-    # show_hm(accuracy_ds, 'accuracy_ds', cps, lps)
-    # show_hm(precision_ds, 'precision_ds', cps, lps)
-    # show_hm(recall_ds, 'recall_ds', cps, lps)
-    # show_hm(fone_score_ds, 'fone_score_ds', cps, lps)
+    # save_hm(accuracy_ls, 'accuracy_ls', cps, lps, out_path)
+    # save_hm(precision_ls, 'precision_ls', cps, lps, out_path)
+    # save_hm(recall_ls, 'recall_ls', cps, lps, out_path)
+    # save_hm(fone_score_ls, 'fone_score_ls', cps, lps, out_path)
 
-    save_hm(accuracy_ls, 'accuracy_ls', cps, lps, out_path)
-    save_hm(precision_ls, 'precision_ls', cps, lps, out_path)
-    save_hm(recall_ls, 'recall_ls', cps, lps, out_path)
-    save_hm(fone_score_ls, 'fone_score_ls', cps, lps, out_path)
+    a_plot, = create_dots(accuracy_ll, 'accuracy_ls', cps, 'r', out_path)
+    p_plot, = create_dots(precision_ll, 'precision_ls', cps, 'b', out_path)
+    r_plot, = create_dots(recall_ll, 'recall_ls', cps, 'g', out_path)
+    f_plot, = create_dots(fone_score_ll, 'fone_score_ls', cps, 'y', out_path)
+
+    plt.legend([a_plot, p_plot, r_plot, f_plot], ['Accuracy', 'Precision', 'Recall', 'F1 Score'])
+
+    save_path = str(Path(out_path).joinpath('determination')) + '.pdf'
+    Path(save_path).parent.mkdir(parents=True, exist_ok=True)
+    plt.savefig(save_path, bbox_inches='tight')
+    plt.clf()
+
     save_hm(precision_ds, 'precision_ds', cps, lps, out_path)
 
-    # Correlation Matrix Heatmap
-    if False:
-        fig, ax = plt.subplots()
-        ax.set_xticks(np.arange(int(len(results)/2)))
-        ax.set_yticks(np.arange(int(len(results)/2)))
-        ax.set_xticklabels([float(r['cp']) for r in results])
-        ax.set_xticklabels([float(r['lp']) for r in results])
-        plt.setp(ax.get_xticklabels(), rotation=45, ha="right",
-            rotation_mode="anchor")
-        for r in results:
-            text = ax.text(str(r['cp']), str(r['lp']), str(r['accuracy_l']),
-                        ha="center", va="center", color="w")
-        ax.set_title('Evaluation Heatmap, Accuracy Localisation')
-        fig.tight_layout()
-        plt.show()
 
-        for r in results:
-            print(r)
+def create_dots(ys, label, xs, color, out_path):
+
+    # plt.axis(ys)
+
+    plt.xlabel('cp')
+    plt.ylabel('Result')
+    return plt.plot(xs, ys, color + 'o')
+
 
 def show_hm(values, label, cps, lps):
     fig, ax = plt.subplots()
@@ -197,8 +230,8 @@ def show_hm(values, label, cps, lps):
 
 def save_hm(values, label, cps, lps, out_path):
     fig, ax = plt.subplots()
-    plt.xlabel("cp")
-    plt.ylabel("lp")
+    plt.xlabel("lp")
+    plt.ylabel("cp")
 
     im, cbar = heatmap(values, cps, lps, ax=ax,
                     cmap="YlGn", cbarlabel=(label + ' in %'))

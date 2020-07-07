@@ -81,8 +81,8 @@ class Generator(object):
         self.font_colors: [str] = crawl_data['font_color_dict']
         self.background_colors: [str] = crawl_data['background_color_dict']
         self.layouts = [e for e in Layout]
-        self.content_types = ['bible', 'lorem', 'random'] # all of them use usernames
-        self.other_types = ['images_only', 'only_text', 'with_images']
+        self.content_sources = ['bible', 'lorem', 'random'] # all of them use usernames
+        self.content_variants = ['images_only', 'only_text', 'with_images']
 
         self.word_list: [str] = self.prepare_words()
         self.bible_list: [str] = self.prepare_bible()
@@ -91,21 +91,21 @@ class Generator(object):
         self.min_delta_e: float = 5.
 
     def generate_html(self):
-        iterations = (len(self.other_types)-1) * len(self.font_families) * len(self.font_sizes) * len(self.font_styles) * len(self.font_weights) * len(self.text_decoration_lines) * len(self.font_colors) * len(self.background_colors) * len(self.layouts) * len(self.content_types) + (len(self.background_colors) * len(self.layouts))
+        iterations = (len(self.content_variants)-1) * len(self.font_families) * len(self.font_sizes) * len(self.font_styles) * len(self.font_weights) * len(self.text_decoration_lines) * len(self.font_colors) * len(self.background_colors) * len(self.layouts) * len(self.content_sources) + (len(self.background_colors) * len(self.layouts))
         curr_it = 0
         with progressbar.ProgressBar(max_value=iterations) as bar:
-            for other_type in self.other_types:
-                if other_type == 'images_only':
+            for content_variant in self.content_variants:
+                if content_variant == 'images_only':
                     for background_color in self.background_colors:
                         count: int = 0
                         for layout in self.layouts:
                             # Generate path
-                            file_path_tmp: str = other_type + '/' + background_color + '/' + str(count)
+                            file_path_tmp: str = content_variant + '/' + background_color + '/' + str(count)
                             file_path: Path = Path(normalize_path(file_path_tmp))
                             count += 1
                             self.prepare(
                                 file_path=file_path,
-                                other_type=other_type,
+                                content_variant=content_variant,
                                 background_color=background_color,
                                 layout=layout,
                                 )
@@ -118,17 +118,17 @@ class Generator(object):
                                         for font_color in self.font_colors:
                                             for background_color in self.background_colors:
                                                 for layout in self.layouts:
-                                                    for content_type in self.content_types:
+                                                    for content_source in self.content_sources:
                                                         bar.update(curr_it)
                                                         curr_it += 1
                                                         if too_similar(font_color, background_color, self.min_delta_e):
                                                             continue
                                                         # Generate path
-                                                        file_path_tmp: str = other_type + '/' + font_family + '/' + font_size + '/' + font_style + '/' + font_weight + '/' + text_decoration_line + '/' + font_color + '/' + '/' + background_color + '/' + layout.name + '/' + content_type
+                                                        file_path_tmp: str = content_variant + '/' + font_family + '/' + font_size + '/' + font_style + '/' + font_weight + '/' + text_decoration_line + '/' + font_color + '/' + '/' + background_color + '/' + layout.name + '/' + content_source
                                                         file_path: Path = Path(normalize_path(file_path_tmp))
                                                         self.prepare(
                                                             file_path=file_path,
-                                                            other_type=other_type,
+                                                            content_variant=content_variant,
                                                             font_family=font_family,
                                                             font_size=font_size,
                                                             font_style=font_style,
@@ -137,13 +137,13 @@ class Generator(object):
                                                             font_color=font_color,
                                                             background_color=background_color,
                                                             layout=layout,
-                                                            content_type=content_type,
+                                                            content_source=content_source,
                                                             )
 
 
     def prepare(self,
         file_path: Path=Path(''),
-        other_type: str='',
+        content_variant: str='',
         font_family: str='',
         font_size: str='',
         font_style: str='',
@@ -152,7 +152,7 @@ class Generator(object):
         font_color: str='',
         background_color: str='',
         layout: Layout=Layout.center,
-        content_type: str='',
+        content_source: str='',
     ):
 
         style: str = ''
@@ -175,15 +175,15 @@ class Generator(object):
         background_images: [str] = []
 
         # Get words, sentences, paragraphs and usernames
-        if other_type != 'images_only':
-            if content_type == 'lorem':
+        if content_variant != 'images_only':
+            if content_source == 'lorem':
                 for _ in range(10):
                     words.append(lorem.get_word())
                     sentences.append(lorem.get_sentence())
                     paragraphs.append(lorem.get_paragraph())
                     usernames.append(self.gen_username())
 
-            elif content_type == 'bible':
+            elif content_source == 'bible':
                 for _ in range(10):
                     words.append(random.choice(self.word_list))
                     sentences.append(random.choice(self.bible_list))
@@ -193,7 +193,7 @@ class Generator(object):
                     paragraphs.append(temp_paragraph)
                     usernames.append(self.gen_username())
 
-            elif content_type == 'random':
+            elif content_source == 'random':
                 for _ in range(10):
                     words.append(self.gen_random_word())
                     sentences.append(self.gen_random_sentence())
@@ -213,7 +213,7 @@ class Generator(object):
             usernames = ['', '','','','','','','','','']
 
         # Get images
-        if other_type == 'with_images' or other_type == 'images_only':
+        if content_variant == 'with_images' or content_variant == 'images_only':
             background_images = self.get_images()
 
         # Generate and save document
