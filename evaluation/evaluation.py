@@ -62,13 +62,13 @@ def evaluate(ideal_path, recognized_path, outpath, coordinate_percent, levenshte
     overall_T_d: int = 0    # Word was recognized
     overall_F_d: int = 0    # Word was not recognized
 
-    file_results: [Result] = [{'path': '', 'tp_l': '', 'fp_l': '', 'fn_l': '', 't_d': '', 'f_d': '', 'time_l': '', 'time_d': '', 'time_c': ''}] 
+    file_results: [Result] = [{'path': '', 'tp_l': '', 'fp_l': '', 'fn_l': '', 't_d': '', 'f_d': '', 'time_l': '', 'time_d': '', 'time_c': ''}]
 
     # EVALUATE THE FILES
     for i in progressbar.progressbar(range(len(ideal_files))):
         ideal_file_path = ideal_files[i]
         recognized_file_path: str = str(get_recognized(ideal_file_path, ideal_path, recognized_path))
-        
+
         # RETRIEVE THE DATA
         ideal: Line = [{'word': '', 'left': '', 'top': '', 'width': '', 'height': ''}]
         recognized: Line = [{'word': '', 'left': '', 'top': '', 'width': '', 'height': ''}]
@@ -99,7 +99,7 @@ def evaluate(ideal_path, recognized_path, outpath, coordinate_percent, levenshte
         del ideal[0]
         del recognized[0]
         # EVALUATE THE DATA
-        file_result: Result = {'path': recognized_file_path, 'tp_l': '', 'fp_l': '', 'fn_l': '', 't_d': '', 'f_d': ''} 
+        file_result: Result = {'path': recognized_file_path, 'tp_l': '', 'fp_l': '', 'fn_l': '', 't_d': '', 'f_d': ''}
 
         # LOCALISATION
         TP_l: int = 0    # True Positives   (ideal coordinate in recognized coordinates)
@@ -137,7 +137,7 @@ def evaluate(ideal_path, recognized_path, outpath, coordinate_percent, levenshte
         for ideal_word, recognized_word in determination_pairs:
             if validate_word(ideal_word, recognized_word, levenshtein_percent):
                 T_d += 1
-        F_d = len(determination_pairs) - T_d 
+        F_d = len(determination_pairs) - T_d
 
         # save the values
         file_result['t_d'] = str(T_d)
@@ -191,7 +191,7 @@ def evaluate(ideal_path, recognized_path, outpath, coordinate_percent, levenshte
 
     # Configuation
     log += '\n'
-    
+
     log += 'Coordinate Percent:\t' + str(coordinate_percent) + '\n'
     log += 'Levenshtein Percent:\t' + str(levenshtein_percent) + '\n'
     # Localisation Results
@@ -290,7 +290,9 @@ def validate_coordinate(ideal_line: Line, recognized_line: Line, coordinate_perc
 
 def validate_word(ideal_word: str, recognized_word: str, levenshtein_percent: int) -> bool:
 
-    return levenshtein.ratio(ideal_word, recognized_word) >= levenshtein_percent
+    # Needleman–Wunsch algorithm
+    normalized_levenshtein = 1 - (levenshtein.distance(ideal_word,recognized_word) / max(len(ideal_word),len(recognized_word)))
+    return normalized_levenshtein >= levenshtein_percent
 
 def normalize_word(word: str) -> str:
     alphanumeric: str = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'

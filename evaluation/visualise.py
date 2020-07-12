@@ -7,14 +7,16 @@ import json
 import re
 import csv
 from matplotlib import rcParams
+import collections
+
 rcParams['font.family'] = 'serif'
 rcParams['font.sans-serif'] = ['Palatino']
 rcParams['font.serif'] = ['Palatino']
-rcParams["font.size"] = "6"
+rcParams["font.size"] = "10"
 rcParams['text.usetex'] ='false'
 rcParams["font.weight"] = "normal" # does not work :/
 rcParams["axes.labelweight"] = "normal" # does not work :/
-rcParams['figure.dpi'] = "200" 
+rcParams['figure.dpi'] = "300" 
 
 def main():
     parser = OptionParser()
@@ -31,8 +33,8 @@ def main():
     in_path = str(Path(options.input))
     out_path = str(Path(options.output))
 
-    # visualise_crawl(in_path, out_path)
-    visualise_evaluation(in_path, out_path)
+    visualise_crawl(in_path, out_path)
+    # visualise_evaluation(in_path, out_path)
 
 def visualise_crawl(in_path, out_path):
     with open(in_path, 'r') as f:
@@ -43,26 +45,55 @@ def visualise_crawl(in_path, out_path):
             continue
 
         # BAR
-        plt.barh(list(log[dic].keys())[:10], list(log[dic].values())[:10], color='b')
+        xs = [i * 100 for i in list(log[dic].values())[:10]]
+        ys = list(log[dic].keys())[:10]
 
-        plt.title(dic)
-        plt.xlabel('Occurences')
-        plt.ylabel('Type')
+        plt.barh(ys, xs, color='b')
+
+        # plt.title(dic)
+        plt.xlabel('Occurences in %')
+        plt.ylabel('Attributes')
 
         plt.tight_layout()
 
         save_path: str = str(Path(out_path).joinpath('bar').joinpath(dic)) + '.pdf'
         Path(save_path).parent.mkdir(parents=True, exist_ok=True)
         plt.savefig(save_path, bbox_inches='tight')
-
+        
         plt.clf()
+
+        # Dots
+        if dic == 'font_weight_dict' or dic == 'font_size_dict':
+            temp = {}
+
+            for i, (k, v) in enumerate(log[dic].items()):
+                if i >= 10:
+                    break
+                temp[k] = v
+            od = collections.OrderedDict(sorted(temp.items()))
+
+            xs = [i * 100 for i in list(od.values())[:10]]
+            ys = list(od.keys())[:10]
+
+            plt.plot(ys, xs, 'bo')
+
+            # plt.title(dic)
+            plt.xlabel('Attributes')
+            plt.ylabel('Occurences in %')
+
+            plt.tight_layout()
+
+            save_path: str = str(Path(out_path).joinpath('dot').joinpath(dic)) + '.pdf'
+            Path(save_path).parent.mkdir(parents=True, exist_ok=True)
+            plt.savefig(save_path, bbox_inches='tight')
+
+            plt.clf()
 
         # PIE
         # plt.pie(labels=list(log[dic].keys())[:10], x=list(log[dic].values())[:10])
         plt.pie(labels=list(log[dic].keys()), x=list(log[dic].values()))
 
-        plt.title(dic)
-
+        # plt.title(dic)
         plt.tight_layout()
 
         save_path: str = str(Path(out_path).joinpath('pie').joinpath(dic)) + '.pdf'
