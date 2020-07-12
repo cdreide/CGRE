@@ -263,10 +263,10 @@ def validate_coordinate(ideal_line: Line, recognized_line: Line, coordinate_perc
             recognized_line['height'] != ''
         )
 
+    # Intersect over Union => IoU = overlap_area / union_area
+
     if not valid_input:
         return False
-
-    valid_box: bool = False
 
     ideal_x_min: int = int(ideal_line['left'])
     ideal_y_min: int = int(ideal_line['top'])
@@ -277,20 +277,23 @@ def validate_coordinate(ideal_line: Line, recognized_line: Line, coordinate_perc
     recognized_x_max: int = int(recognized_line['left']) + int(recognized_line['width'])
     recognized_y_max: int = int(recognized_line['top']) + int(recognized_line['height'])
 
-    ideal_area: float = int(ideal_line['width']) * int(ideal_line['height'])
-    common_area: int = 0
     dx = min(ideal_x_max, recognized_x_max) - max(ideal_x_min, recognized_x_min)
     dy = min(ideal_y_max, recognized_y_max) - max(ideal_y_min, recognized_y_min)
-    if (dx >= 0) and (dy >= 0):
-        common_area = dx * dy
-        if (float(common_area) / ideal_area) >= coordinate_percent:
-            valid_box = True
+    if (dx < 0) or (dy < 0):
+        return 0.0 >= coordinate_percent
+    overlap_area: int = dx * dy
 
-    return valid_box
+    ideal_area: int = int(ideal_line['width']) * int(ideal_line['height'])
+    recognized_area: int = int(recognized_line['width']) * int(recognized_line['height'])
+    union_area: int = ideal_area + recognized_area - overlap_area
+    try:
+        iou: float = overlap_area / union_area
+        return iou >= coordinate_percent
+    except:
+        return False
 
 def validate_word(ideal_word: str, recognized_word: str, levenshtein_percent: int) -> bool:
 
-    # Needleman–Wunsch algorithm
     normalized_levenshtein = 1 - (levenshtein.distance(ideal_word,recognized_word) / max(len(ideal_word),len(recognized_word)))
     return normalized_levenshtein >= levenshtein_percent
 
