@@ -1,4 +1,7 @@
-# OCROnWebpages
+# CGRE FRAMEWORK
+
+A Framework to create a dataset and use it to evaluate the Tesseract OCR software for the usecase on webpages.
+You can use it to evaluate other OCR software.
 
 Pre:
     Docker:
@@ -25,10 +28,11 @@ example call to create dataset:
 `` python dataset/creation/main.py -o /data/results -t 3 -v -b ``
 
 main.py
+
     -i:
         a file containing one url per line to use for crawling (not needed when crawling is skipped)
     -o:
-        path to an output folder
+        path to an output folder        
     -t:
         provide a number indicating on which entry to stop when parsing the crawl data (i.e. '-t 3' the 3 most used stylings per attribute will be parsed)
         Default:
@@ -60,25 +64,13 @@ main.py
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 generate:
 `` pipenv run python generate_html.py ``
     => './html/font_family/font_size/font_style/layout.html'
 
 render ( & save ):
 `` pipenv run python render_html.py ``
+
     => './dataset/font_family/font_size/font_style/layout.png'  
     => './dataset/font_family/font_size/font_style/layout.txt'  
         (contains words and their boxes in this format: // word\t(left,top,width,height)\n)  
@@ -86,10 +78,12 @@ render ( & save ):
 
 zip:
 `` pipenv run python zip_dataset.py ``
+
     => zips the 'dataset' directory with the same structure to 'dataset.zip'
 
 evaluation:
 `` pipenv run python evaluation.py ideal recognized``
+
     => evaluates the recognized dataset against the ideal
         True Positives 
         False Positives
