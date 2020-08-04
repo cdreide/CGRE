@@ -82,23 +82,26 @@ zip:
     => zips the 'dataset' directory with the same structure to 'dataset.zip'
 
 evaluation:
-`` pipenv run python evaluation.py ideal recognized``
+`` pipenv run python evaluate_combinations.py ideal recognized -o output_folder``
 
-    => evaluates the recognized dataset against the ideal
+    => evaluates the recognized dataset against the ideal using different IoU and Levenshtein Thresholds -> 0.5 to 0.9 respectively
         True Positives 
         False Positives
         False Negatives
-        Accuracy
-        Precision
-        Recall
-        F1-Score
-        (for respectively the localisation and the determination)
+        Accuracy (for localisation)
+        Precision (for localisation and determination)
+        Recall (for localisation)
     => they need to have the same structure
-    => results in 2 files:
-        'evaluation_ideal_recognized.csv'
-            (contains the )
-        'evaluation_ideal_recognized.txt'
-
-
+    => results in 50 files:
+        'evaluation_ideal_recognized_cp05_lp05.csv'
+        'evaluation_ideal_recognized_cp05_lp05.txt'
+        'evaluation_ideal_recognized_cp05_lp06.csv'
+        'evaluation_ideal_recognized_cp05_lp06.txt'
+        ...
+        'evaluation_ideal_recognized_cp09_lp09.csv'
+        'evaluation_ideal_recognized_cp09_lp09.txt'
+        
+        *.csv files contain time measurements and TP/FP/FN for every single webdocument
+        *.txt files contain  Accuracy Precision Recall and TP/FP/FN for every webdocument accumulated
 reset virtual env:
 ``pipenv --rm``
